@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Qyzmet Admin — Поставщики</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+    .filter-tabs { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+    .filter-tab {
+      padding: 7px 16px; border-radius: 20px; font-size: 13px; font-weight: 500;
+      background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .filter-tab:hover, .filter-tab.active {
+      border-color: var(--accent); color: var(--accent);
+      background: rgba(0,188,212,0.1);
+    }
+  </style>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-text">QYZMET</div>
+      <div class="logo-sub">Admin Panel</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Главное</div>
+      <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="users.html" class="nav-item"><span class="nav-icon">👥</span> Пользователи</a>
+      <a href="providers.html" class="nav-item active"><span class="nav-icon">🔧</span> Поставщики <span class="nav-badge" id="pending-badge"></span></a>
+      <div class="nav-section-title">Операции</div>
+      <a href="bookings.html" class="nav-item"><span class="nav-icon">📋</span> Бронирования</a>
+      <a href="disputes.html" class="nav-item"><span class="nav-icon">⚖️</span> Споры <span class="nav-badge" id="disputes-badge"></span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="admin-info">
+        <div class="admin-avatar" id="admin-initials">A</div>
+        <div>
+          <div class="admin-name" id="admin-name">Admin</div>
+          <div class="admin-role">Super Admin</div>
+        </div>
+        <button class="btn-logout" id="logout-btn" title="Выйти">⎋</button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Поставщики услуг</div>
+        <div class="page-subtitle" id="total-count">Загрузка...</div>
+      </div>
+    </div>
+
+    <div class="content-area">
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="all">Все</button>
+        <button class="filter-tab" data-filter="pending">На проверке</button>
+        <button class="filter-tab" data-filter="active">Активные</button>
+        <button class="filter-tab" data-filter="suspended">Заблокированные</button>
+        <button class="filter-tab" data-filter="rejected">Отклоненные</button>
+      </div>
+
+      <div class="filters-bar">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="search-input" placeholder="Поиск по имени, email, категории..."/>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Поставщик</th>
+                <th>Категория</th>
+                <th>Город</th>
+                <th>Статус</th>
+                <th>Рейтинг</th>
+                <th>Заработок</th>
+                <th>Действия</th>
+              </tr>
+            </thead>
+            <tbody id="providers-table">
+              <tr><td colspan="7"><div class="loading"><div class="spinner"></div> Загрузка...</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Provider Detail Modal -->
+<div class="modal-overlay" id="provider-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-provider-name">Поставщик</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div id="modal-provider-details"></div>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+
+<script type="module" src="js/providers.js"></script>
+<script type="module">
+  import { logout } from './js/auth.js';
+  document.getElementById('logout-btn').addEventListener('click', logout);
+</script>
+</body>
+</html>

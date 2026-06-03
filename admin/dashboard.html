@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Qyzmet Admin — Dashboard</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<div class="admin-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-text">QYZMET</div>
+      <div class="logo-sub">Admin Panel</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Главное</div>
+      <a href="dashboard.html" class="nav-item active">
+        <span class="nav-icon">📊</span> Dashboard
+      </a>
+      <a href="users.html" class="nav-item">
+        <span class="nav-icon">👥</span> Пользователи
+      </a>
+      <a href="providers.html" class="nav-item">
+        <span class="nav-icon">🔧</span> Поставщики
+        <span class="nav-badge" id="pending-badge"></span>
+      </a>
+      <div class="nav-section-title">Операции</div>
+      <a href="bookings.html" class="nav-item">
+        <span class="nav-icon">📋</span> Бронирования
+      </a>
+      <a href="disputes.html" class="nav-item">
+        <span class="nav-icon">⚖️</span> Споры
+        <span class="nav-badge" id="disputes-badge"></span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="admin-info">
+        <div class="admin-avatar" id="admin-initials">A</div>
+        <div>
+          <div class="admin-name" id="admin-name">Admin</div>
+          <div class="admin-role">Super Admin</div>
+        </div>
+        <button class="btn-logout" id="logout-btn" title="Выйти">⎋</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Dashboard</div>
+        <div class="page-subtitle" id="current-date"></div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-outline btn-sm" onclick="location.reload()">↻ Обновить</button>
+      </div>
+    </div>
+
+    <div class="content-area">
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon teal">👥</div>
+          <div>
+            <div class="stat-value" id="stat-users">—</div>
+            <div class="stat-label">Пользователи</div>
+            <div class="stat-change up" id="stat-users-change"></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">🔧</div>
+          <div>
+            <div class="stat-value" id="stat-providers">—</div>
+            <div class="stat-label">Активные поставщики</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange">📋</div>
+          <div>
+            <div class="stat-value" id="stat-bookings">—</div>
+            <div class="stat-label">Бронирований за месяц</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon blue">💰</div>
+          <div>
+            <div class="stat-value" id="stat-revenue">—</div>
+            <div class="stat-label">Выручка за месяц</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard Grid -->
+      <div class="dashboard-grid">
+        <!-- Recent Bookings -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Последние бронирования</div>
+            <a href="bookings.html" class="btn btn-sm btn-outline">Все →</a>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Клиент</th>
+                  <th>Поставщик</th>
+                  <th>Услуга</th>
+                  <th>Статус</th>
+                  <th>Сумма</th>
+                </tr>
+              </thead>
+              <tbody id="recent-bookings">
+                <tr><td colspan="6"><div class="loading"><div class="spinner"></div> Загрузка...</div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Pending Providers -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Ожидают проверки</div>
+            <a href="providers.html" class="btn btn-sm btn-outline">Все →</a>
+          </div>
+          <div class="card-body">
+            <div id="pending-providers">
+              <div class="loading"><div class="spinner"></div> Загрузка...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+
+<script type="module" src="js/dashboard.js"></script>
+<script type="module">
+  import { logout } from './js/auth.js';
+  document.getElementById('logout-btn').addEventListener('click', logout);
+  document.getElementById('current-date').textContent = new Date().toLocaleDateString('ru-RU', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  });
+</script>
+</body>
+</html>

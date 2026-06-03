@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Qyzmet Admin — Споры</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-text">QYZMET</div>
+      <div class="logo-sub">Admin Panel</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Главное</div>
+      <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="users.html" class="nav-item"><span class="nav-icon">👥</span> Пользователи</a>
+      <a href="providers.html" class="nav-item"><span class="nav-icon">🔧</span> Поставщики</a>
+      <div class="nav-section-title">Операции</div>
+      <a href="bookings.html" class="nav-item"><span class="nav-icon">📋</span> Бронирования</a>
+      <a href="disputes.html" class="nav-item active"><span class="nav-icon">⚖️</span> Споры <span class="nav-badge" id="disputes-badge"></span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="admin-info">
+        <div class="admin-avatar" id="admin-initials">A</div>
+        <div>
+          <div class="admin-name" id="admin-name">Admin</div>
+          <div class="admin-role">Super Admin</div>
+        </div>
+        <button class="btn-logout" id="logout-btn">⎋</button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Споры и разногласия</div>
+        <div class="page-subtitle" id="total-count">Загрузка...</div>
+      </div>
+    </div>
+
+    <div class="content-area">
+      <div class="card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>ID спора</th>
+                <th>Бронирование</th>
+                <th>Клиент</th>
+                <th>Поставщик</th>
+                <th>Причина</th>
+                <th>Сумма</th>
+                <th>Дата</th>
+                <th>Действия</th>
+              </tr>
+            </thead>
+            <tbody id="disputes-table">
+              <tr><td colspan="8"><div class="loading"><div class="spinner"></div> Загрузка...</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Resolve Dispute Modal -->
+<div class="modal-overlay" id="resolve-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Решение спора</div>
+      <button class="modal-close" onclick="document.getElementById('resolve-modal').classList.remove('open')">×</button>
+    </div>
+    <div id="dispute-detail" style="margin-bottom:16px;color:var(--text-secondary)"></div>
+    <div class="form-group">
+      <label class="form-label">Решение</label>
+      <select class="filter-select" id="resolution-type" style="width:100%;margin-bottom:10px">
+        <option value="refund_client">Возврат средств клиенту</option>
+        <option value="pay_provider">Оплата поставщику</option>
+        <option value="split">Разделить поровну</option>
+        <option value="dismiss">Отклонить спор</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Комментарий</label>
+      <textarea id="resolution-comment" class="form-input" rows="3" placeholder="Объяснение решения..." style="resize:vertical"></textarea>
+    </div>
+    <button class="btn btn-primary" id="submit-resolution" style="width:100%;padding:12px">Применить решение</button>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+
+<script type="module">
+  import { db } from './js/firebase-config.js';
+  import { requireAuth, showToast, formatDate, formatMoney } from './js/auth.js';
+  import {
+    collection, query, where, orderBy, getDocs, doc, updateDoc, onSnapshot, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  let currentDisputeId = null;
+
+  requireAuth(async (user, adminData) => {
+    document.getElementById('admin-name').textContent = adminData.name || user.email;
+    document.getElementById('admin-initials').textContent = (adminData.name || 'A')[0].toUpperCase();
+    loadDisputes();
+    setupRealtimeCounter();
+  });
+
+  function loadDisputes() {
+    const q = query(collection(db, 'disputes'), orderBy('createdAt', 'desc'));
+    onSnapshot(q, (snap) => {
+      const disputes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      document.getElementById('total-count').textContent = `Всего споров: ${disputes.length}`;
+      document.getElementById('disputes-badge').textContent = disputes.filter(d => d.status === 'open').length || '';
+      renderDisputes(disputes);
+    });
+  }
+
+  function renderDisputes(disputes) {
+    const tbody = document.getElementById('disputes-table');
+    if (!disputes.length) {
+      tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">⚖️</div><p>Нет споров</p></div></td></tr>';
+      return;
+    }
+
+    const statusBadge = {
+      open:     '<span class="badge badge-danger">Открыт</span>',
+      resolved: '<span class="badge badge-success">Решен</span>',
+      dismissed:'<span class="badge badge-muted">Отклонен</span>'
+    };
+
+    tbody.innerHTML = disputes.map(d => `
+      <tr>
+        <td class="td-main">#${d.id.slice(-6).toUpperCase()}</td>
+        <td>#${(d.bookingId || '').slice(-6).toUpperCase()}</td>
+        <td>${d.clientName || '—'}</td>
+        <td>${d.providerName || '—'}</td>
+        <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.reason || '—'}</td>
+        <td>${formatMoney(d.amount)}</td>
+        <td>${formatDate(d.createdAt)}</td>
+        <td>
+          ${d.status === 'open' ? `<button class="btn btn-sm btn-warning" onclick="openResolveModal('${d.id}', ${JSON.stringify(d).replace(/'/g, "\\'")})">Решить</button>` :
+            statusBadge[d.status] || d.status}
+        </td>
+      </tr>`).join('');
+  }
+
+  window.openResolveModal = (id, dispute) => {
+    currentDisputeId = id;
+    document.getElementById('dispute-detail').innerHTML = `
+      <strong>${dispute.clientName}</strong> vs <strong>${dispute.providerName}</strong><br/>
+      <span style="color:var(--text-muted)">Причина: ${dispute.reason}</span>`;
+    document.getElementById('resolve-modal').classList.add('open');
+  };
+
+  document.getElementById('submit-resolution').addEventListener('click', async () => {
+    if (!currentDisputeId) return;
+    const resolution = document.getElementById('resolution-type').value;
+    const comment = document.getElementById('resolution-comment').value;
+
+    try {
+      await updateDoc(doc(db, 'disputes', currentDisputeId), {
+        status: resolution === 'dismiss' ? 'dismissed' : 'resolved',
+        resolution,
+        resolutionComment: comment,
+        resolvedAt: serverTimestamp(),
+        resolvedBy: 'admin'
+      });
+      showToast('Спор решен', 'success');
+      document.getElementById('resolve-modal').classList.remove('open');
+      currentDisputeId = null;
+      document.getElementById('resolution-comment').value = '';
+    } catch (err) {
+      showToast('Ошибка', 'error');
+    }
+  });
+
+  function setupRealtimeCounter() {
+    const q = query(collection(db, 'disputes'), where('status', '==', 'open'));
+    onSnapshot(q, snap => {
+      const badge = document.getElementById('disputes-badge');
+      if (badge) badge.textContent = snap.size > 0 ? snap.size : '';
+    });
+  }
+
+  import { logout } from './js/auth.js';
+  document.getElementById('logout-btn').addEventListener('click', logout);
+</script>
+</body>
+</html>

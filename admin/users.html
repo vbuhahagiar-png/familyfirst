@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Qyzmet Admin — Пользователи</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-text">QYZMET</div>
+      <div class="logo-sub">Admin Panel</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Главное</div>
+      <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="users.html" class="nav-item active"><span class="nav-icon">👥</span> Пользователи</a>
+      <a href="providers.html" class="nav-item"><span class="nav-icon">🔧</span> Поставщики</a>
+      <div class="nav-section-title">Операции</div>
+      <a href="bookings.html" class="nav-item"><span class="nav-icon">📋</span> Бронирования</a>
+      <a href="disputes.html" class="nav-item"><span class="nav-icon">⚖️</span> Споры</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="admin-info">
+        <div class="admin-avatar" id="admin-initials">A</div>
+        <div>
+          <div class="admin-name" id="admin-name">Admin</div>
+          <div class="admin-role">Super Admin</div>
+        </div>
+        <button class="btn-logout" id="logout-btn">⎋</button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Пользователи</div>
+        <div class="page-subtitle" id="total-count">Загрузка...</div>
+      </div>
+    </div>
+
+    <div class="content-area">
+      <div class="filters-bar">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="search-input" placeholder="Поиск по имени, email, телефону..."/>
+        </div>
+        <select class="filter-select" id="role-filter">
+          <option value="all">Все роли</option>
+          <option value="client">Клиенты</option>
+          <option value="provider">Поставщики</option>
+        </select>
+      </div>
+
+      <div class="card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Пользователь</th>
+                <th>Телефон</th>
+                <th>Роль</th>
+                <th>Бронирований</th>
+                <th>Потрачено</th>
+                <th>Дата регистрации</th>
+                <th>Действия</th>
+              </tr>
+            </thead>
+            <tbody id="users-table">
+              <tr><td colspan="7"><div class="loading"><div class="spinner"></div> Загрузка...</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+
+<script type="module">
+  import { db } from './js/firebase-config.js';
+  import { requireAuth, showToast, formatDate, formatMoney } from './js/auth.js';
+  import {
+    collection, query, orderBy, getDocs, doc, updateDoc, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  let allUsers = [];
+
+  requireAuth(async (user, adminData) => {
+    document.getElementById('admin-name').textContent = adminData.name || user.email;
+    document.getElementById('admin-initials').textContent = (adminData.name || 'A')[0].toUpperCase();
+    await loadUsers();
+    setupSearch();
+  });
+
+  async function loadUsers() {
+    const tbody = document.getElementById('users-table');
+    try {
+      const snap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc')));
+      allUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      document.getElementById('total-count').textContent = `Всего: ${allUsers.length}`;
+      renderUsers(allUsers);
+    } catch (err) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--danger);padding:30px">Ошибка загрузки</td></tr>';
+    }
+  }
+
+  function renderUsers(users) {
+    const tbody = document.getElementById('users-table');
+    if (!users.length) {
+      tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">👤</div><p>Нет пользователей</p></div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = users.map(u => `
+      <tr>
+        <td>
+          <div class="user-cell">
+            <div class="avatar">${(u.name || u.email || 'U')[0].toUpperCase()}</div>
+            <div>
+              <div class="td-main">${u.name || '—'}</div>
+              <div style="font-size:12px;color:var(--text-muted)">${u.email || ''}</div>
+            </div>
+          </div>
+        </td>
+        <td>${u.phone || '—'}</td>
+        <td>${u.role === 'provider' ? '<span class="badge badge-accent">Поставщик</span>' : '<span class="badge badge-muted">Клиент</span>'}</td>
+        <td>${u.bookingCount || 0}</td>
+        <td>${formatMoney(u.totalSpent)}</td>
+        <td>${formatDate(u.createdAt)}</td>
+        <td>
+          <div class="btn-group">
+            ${u.disabled ? `<button class="btn btn-sm btn-success" onclick="enableUser('${u.id}')">Включить</button>` :
+                          `<button class="btn btn-sm btn-danger" onclick="disableUser('${u.id}')">Заблокировать</button>`}
+          </div>
+        </td>
+      </tr>`).join('');
+  }
+
+  function setupSearch() {
+    document.getElementById('search-input').addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase();
+      const roleFilter = document.getElementById('role-filter').value;
+      const filtered = allUsers.filter(u => {
+        const matchSearch = (u.name || '').toLowerCase().includes(term) ||
+          (u.email || '').toLowerCase().includes(term) ||
+          (u.phone || '').includes(term);
+        const matchRole = roleFilter === 'all' || u.role === roleFilter;
+        return matchSearch && matchRole;
+      });
+      renderUsers(filtered);
+    });
+
+    document.getElementById('role-filter').addEventListener('change', () => {
+      document.getElementById('search-input').dispatchEvent(new Event('input'));
+    });
+  }
+
+  window.disableUser = async (id) => {
+    if (!confirm('Заблокировать пользователя?')) return;
+    try {
+      await updateDoc(doc(db, 'users', id), { disabled: true, disabledAt: serverTimestamp() });
+      showToast('Пользователь заблокирован', 'info');
+      loadUsers();
+    } catch (err) { showToast('Ошибка', 'error'); }
+  };
+
+  window.enableUser = async (id) => {
+    try {
+      await updateDoc(doc(db, 'users', id), { disabled: false });
+      showToast('Пользователь разблокирован', 'success');
+      loadUsers();
+    } catch (err) { showToast('Ошибка', 'error'); }
+  };
+
+  import { logout } from './js/auth.js';
+  document.getElementById('logout-btn').addEventListener('click', logout);
+</script>
+</body>
+</html>
