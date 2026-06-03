@@ -120,6 +120,19 @@ class AppConstants {
     },
   ];
 
+  // Astana districts
+  static const List<String> astanaDistricts = [
+    'Алматы',
+    'Байконур',
+    'Есиль',
+    'Нура',
+    'Сарыарка',
+    'Байзак',
+  ];
+
+  // Booking durations in hours
+  static const List<int> bookingDurations = [1, 2, 3, 4, 6, 8];
+
   // Storage paths
   static const String avatarsPath = 'avatars';
   static const String providersPath = 'providers';

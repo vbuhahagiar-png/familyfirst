@@ -1,0 +1,46 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isImageFile() {
+      return request.resource.contentType.matches('image/.*');
+    }
+
+    function isFileSizeValid() {
+      return request.resource.size < 5 * 1024 * 1024; // 5 MB max
+    }
+
+    // User avatars
+    match /avatars/{userId} {
+      allow read: if true;
+      allow write: if isAuthenticated() &&
+        isOwner(userId) &&
+        isImageFile() &&
+        isFileSizeValid();
+    }
+
+    // Provider photos
+    match /providers/{providerId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAuthenticated() && isImageFile() && isFileSizeValid();
+    }
+
+    // ID Documents (private - only owner and admins)
+    match /documents/{providerId} {
+      allow read: if isAuthenticated() && isOwner(providerId);
+      allow write: if isAuthenticated() &&
+        isOwner(providerId) &&
+        isImageFile() &&
+        isFileSizeValid();
+    }
+  }
+}
