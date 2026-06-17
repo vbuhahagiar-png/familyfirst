@@ -3,362 +3,153 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Qyzmet — Démo Interactive</title>
+<title>Qyzmet — Démo</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --primary: #00BCD4; --primary-dark: #0097A7; --primary-light: #E0F7FA;
-    --bg: #F8FAFB; --card: #fff; --text: #1A1A2E; --text2: #6B7280;
-    --border: #E5E7EB; --success: #10B981; --danger: #EF4444; --warning: #F59E0B;
-    --shadow: 0 2px 8px rgba(0,0,0,0.08); --radius: 16px; --radius-sm: 10px; --radius-btn: 12px;
-  }
-  body { font-family:'Inter',sans-serif; background:linear-gradient(135deg,#006064 0%,#0097A7 40%,#00BCD4 100%); min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; }
-  .demo-header { color:white; text-align:center; margin-bottom:20px; }
-  .demo-header h1 { font-size:26px; font-weight:800; }
-  .demo-header p { font-size:13px; opacity:.8; margin-top:3px; }
-  .breadcrumb { background:rgba(255,255,255,.15); border-radius:20px; padding:5px 14px; font-size:12px; color:white; margin-top:8px; display:inline-block; }
-  .phone { width:375px; height:812px; border-radius:44px; background:white; box-shadow:0 40px 100px rgba(0,0,0,.4),0 0 0 8px #1a1a1a,0 0 0 10px #2a2a2a; overflow:hidden; position:relative; display:flex; flex-direction:column; }
-  .status-bar { background:white; padding:12px 24px 6px; display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600; flex-shrink:0; z-index:10; }
-  .status-bar .time { font-size:15px; font-weight:700; }
-  .status-icons { display:flex; gap:5px; align-items:center; font-size:14px; }
-  .screen { display:none; flex-direction:column; flex:1; overflow:hidden; position:absolute; top:44px; left:0; right:0; bottom:0; background:var(--bg); }
-  .screen.active { display:flex; }
-  .screen-scroll { flex:1; overflow-y:auto; }
-  .screen-scroll::-webkit-scrollbar { display:none; }
-  .tab-bar { background:white; border-top:1px solid var(--border); display:flex; padding:8px 0 14px; flex-shrink:0; }
-  .tab-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:4px; border:none; background:none; color:var(--text2); font-family:'Inter',sans-serif; font-size:10px; font-weight:500; transition:color .2s; }
-  .tab-item.active { color:var(--primary); }
-  .tab-item svg { width:22px; height:22px; }
-
-  /* SPLASH */
-  #screen-splash { background:linear-gradient(160deg,#0097A7,#00BCD4); align-items:center; justify-content:center; top:0; }
-  .splash-logo { text-align:center; color:white; }
-  .splash-house { font-size:80px; animation:pulse 2s infinite; }
-  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
-  .splash-logo h1 { font-size:44px; font-weight:800; letter-spacing:-1px; margin-top:10px; }
-  .splash-logo p { font-size:16px; opacity:.85; margin-top:6px; font-weight:500; }
-  .splash-dots { display:flex; gap:8px; justify-content:center; margin-top:60px; }
-  .splash-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.4); animation:dp 1.4s infinite; }
-  .splash-dot:nth-child(2){animation-delay:.2s} .splash-dot:nth-child(3){animation-delay:.4s}
-  @keyframes dp { 0%,80%,100%{opacity:.4} 40%{opacity:1;background:white} }
-
-  /* ONBOARDING */
-  #screen-onboarding { background:white; top:0; }
-  .onboard-slides { flex:1; overflow:hidden; position:relative; }
-  .onboard-slide { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 32px; opacity:0; transition:opacity .4s; pointer-events:none; }
-  .onboard-slide.active { opacity:1; pointer-events:all; }
-  .onboard-icon { font-size:88px; margin-bottom:24px; }
-  .onboard-slide h2 { font-size:25px; font-weight:800; color:var(--text); text-align:center; line-height:1.2; }
-  .onboard-slide p { font-size:15px; color:var(--text2); text-align:center; margin-top:12px; line-height:1.6; }
-  .onboard-bottom { padding:20px 28px 28px; }
-  .onboard-dots { display:flex; justify-content:center; gap:8px; margin-bottom:20px; }
-  .onboard-dot { width:8px; height:8px; border-radius:4px; background:var(--border); transition:all .3s; }
-  .onboard-dot.active { width:24px; background:var(--primary); }
-  .skip-link { display:block; text-align:center; color:var(--text2); font-size:14px; margin-top:12px; cursor:pointer; }
-
-  /* LOGIN */
-  #screen-login { background:white; top:0; }
-  .login-inner { padding:36px 28px; }
-  .login-logo { text-align:center; margin-bottom:28px; }
-  .login-logo .icon { font-size:44px; }
-  .login-logo h2 { font-size:28px; font-weight:800; color:var(--primary); }
-  .login-logo p { font-size:13px; color:var(--text2); }
-  .login-title { font-size:22px; font-weight:700; color:var(--text); margin-bottom:18px; }
-  .form-group { margin-bottom:13px; }
-  .form-group label { display:block; font-size:13px; font-weight:600; color:var(--text); margin-bottom:5px; }
-  .form-input { width:100%; padding:13px 16px; border:1.5px solid var(--border); border-radius:var(--radius-btn); font-size:15px; font-family:'Inter',sans-serif; color:var(--text); background:var(--bg); outline:none; transition:border-color .2s; }
-  .form-input:focus { border-color:var(--primary); background:white; }
-  .divider { display:flex; align-items:center; gap:12px; margin:14px 0; color:var(--text2); font-size:13px; }
-  .divider::before,.divider::after { content:''; flex:1; height:1px; background:var(--border); }
-  .btn { width:100%; padding:14px; border-radius:var(--radius-btn); border:none; font-size:15px; font-weight:600; font-family:'Inter',sans-serif; cursor:pointer; transition:all .2s; display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:10px; }
-  .btn:last-child { margin-bottom:0; }
-  .btn-primary { background:var(--primary); color:white; }
-  .btn-primary:active { background:var(--primary-dark); transform:scale(.98); }
-  .btn-white { background:white; color:var(--text); border:1.5px solid var(--border); }
-  .btn-black { background:#000; color:white; }
-  .btn-outline { background:transparent; color:var(--primary); border:1.5px solid var(--primary); }
-  .btn-sm { width:auto; padding:10px 18px; font-size:14px; margin-bottom:0; }
-  .btn-danger-outline { background:transparent; color:var(--danger); border:1.5px solid var(--danger); }
-  .link-text { text-align:center; font-size:14px; color:var(--text2); margin-top:14px; }
-  .link-text a { color:var(--primary); font-weight:600; cursor:pointer; }
-
-  /* HOME */
-  .home-header { background:var(--primary); padding:20px 20px 28px; color:white; }
-  .home-greeting { font-size:20px; font-weight:700; }
-  .home-loc { font-size:13px; opacity:.85; margin-top:2px; }
-  .search-bar { background:white; border-radius:var(--radius-btn); padding:12px 16px; display:flex; align-items:center; gap:10px; margin-top:14px; cursor:pointer; }
-  .search-bar input { border:none; outline:none; font-size:14px; font-family:'Inter',sans-serif; color:var(--text2); flex:1; background:transparent; cursor:pointer; }
-  .section { padding:18px 20px 0; }
-  .section-title { font-size:17px; font-weight:700; color:var(--text); margin-bottom:13px; }
-  .categories { display:grid; grid-template-columns:1fr 1fr; gap:11px; }
-  .cat-card { background:white; border-radius:var(--radius); padding:16px; box-shadow:var(--shadow); cursor:pointer; transition:transform .2s; }
-  .cat-card:active { transform:scale(.97); }
-  .cat-icon { font-size:30px; margin-bottom:8px; }
-  .cat-name { font-size:14px; font-weight:600; color:var(--text); }
-  .cat-price { font-size:12px; color:var(--text2); margin-top:2px; }
-  .prov-scroll { display:flex; gap:12px; overflow-x:auto; padding:0 20px 18px; scrollbar-width:none; }
-  .prov-scroll::-webkit-scrollbar { display:none; }
-  .prov-mini { background:white; border-radius:var(--radius); padding:14px; min-width:156px; box-shadow:var(--shadow); cursor:pointer; flex-shrink:0; transition:transform .2s; }
-  .prov-mini:active { transform:scale(.97); }
-  .avatar { border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; color:white; flex-shrink:0; }
-  .av-lg { width:54px; height:54px; font-size:20px; }
-  .av-md { width:44px; height:44px; font-size:16px; }
-  .av-sm { width:36px; height:36px; font-size:13px; }
-  .av-blue{background:#3B82F6} .av-purple{background:#8B5CF6} .av-green{background:#10B981} .av-orange{background:#F59E0B} .av-pink{background:#EC4899}
-  .badge { display:inline-flex; align-items:center; gap:3px; font-size:11px; font-weight:600; padding:3px 8px; border-radius:20px; }
-  .badge-success{background:#DCFCE7;color:#166534} .badge-warning{background:#FEF3C7;color:#92400E} .badge-primary{background:var(--primary-light);color:var(--primary-dark)} .badge-gray{background:var(--border);color:var(--text2)}
-  .stars { color:#F59E0B; font-size:12px; }
-  .prov-name { font-size:14px; font-weight:600; color:var(--text); margin:8px 0 3px; }
-  .prov-price { font-size:13px; font-weight:600; color:var(--primary); }
-
-  /* TOPBAR */
-  .top-bar { background:white; padding:14px 20px; display:flex; align-items:center; gap:14px; border-bottom:1px solid var(--border); flex-shrink:0; }
-  .back-btn { background:none; border:none; cursor:pointer; padding:4px; display:flex; align-items:center; color:var(--text); }
-  .top-bar-title { font-size:17px; font-weight:700; color:var(--text); flex:1; }
-  .filters-scroll { display:flex; gap:8px; padding:12px 20px; overflow-x:auto; scrollbar-width:none; flex-shrink:0; background:white; border-bottom:1px solid var(--border); }
-  .filters-scroll::-webkit-scrollbar { display:none; }
-  .chip { padding:7px 13px; border-radius:20px; border:1.5px solid var(--border); background:white; font-size:13px; font-weight:500; color:var(--text2); cursor:pointer; white-space:nowrap; font-family:'Inter',sans-serif; transition:all .2s; }
-  .chip.active { background:var(--primary); border-color:var(--primary); color:white; }
-  .prov-card { background:white; margin:11px 20px 0; border-radius:var(--radius); padding:15px; box-shadow:var(--shadow); display:flex; gap:13px; cursor:pointer; transition:transform .2s; }
-  .prov-card:active { transform:scale(.98); }
-  .prov-card-info { flex:1; }
-  .prov-card-name { font-size:15px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:5px; }
-  .verified { color:var(--primary); font-size:14px; }
-  .prov-card-meta { font-size:12px; color:var(--text2); margin-top:3px; }
-  .prov-card-bottom { display:flex; align-items:center; justify-content:space-between; margin-top:9px; }
-  .prov-card-price { font-size:15px; font-weight:700; color:var(--text); }
-  .serv-chip { display:inline-block; background:var(--primary-light); color:var(--primary-dark); font-size:11px; font-weight:600; padding:4px 10px; border-radius:20px; margin:3px 3px 0 0; }
-
-  /* DETAIL */
-  .detail-hero { background:linear-gradient(180deg,var(--primary),var(--primary-dark)); padding:56px 20px 70px; display:flex; flex-direction:column; align-items:center; color:white; position:relative; }
-  .detail-back { position:absolute; top:14px; left:16px; background:rgba(255,255,255,.2); border:none; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:white; }
-  .detail-av { width:86px; height:86px; border-radius:50%; border:4px solid white; display:flex; align-items:center; justify-content:center; font-size:32px; font-weight:700; color:white; margin-bottom:12px; }
-  .detail-name { font-size:22px; font-weight:800; }
-  .detail-job { font-size:14px; opacity:.85; margin-top:2px; }
-  .detail-stats { display:flex; gap:18px; margin-top:12px; }
-  .detail-stat { text-align:center; font-size:12px; opacity:.9; }
-  .detail-stat strong { display:block; font-size:17px; font-weight:700; }
-  .dtabs { display:flex; background:white; border-bottom:1px solid var(--border); flex-shrink:0; }
-  .dtab { flex:1; padding:13px; text-align:center; font-size:13px; font-weight:600; color:var(--text2); cursor:pointer; border-bottom:2px solid transparent; border-top:none; border-left:none; border-right:none; background:none; font-family:'Inter',sans-serif; transition:all .2s; }
-  .dtab.active { color:var(--primary); border-bottom-color:var(--primary); }
-  .tcontent { display:none; padding:18px; }
-  .tcontent.active { display:block; }
-  .price-row { display:flex; justify-content:space-between; font-size:14px; color:var(--text2); margin-bottom:5px; }
-  .price-row.total { font-size:17px; font-weight:700; color:var(--text); border-top:1px solid var(--border); padding-top:9px; margin-top:3px; }
-  .review-card { background:var(--bg); border-radius:var(--radius-sm); padding:13px; margin-bottom:10px; }
-  .review-head { display:flex; align-items:center; gap:10px; margin-bottom:7px; }
-  .review-name { font-size:14px; font-weight:600; color:var(--text); }
-  .review-date { font-size:12px; color:var(--text2); }
-  .review-text { font-size:13px; color:var(--text); line-height:1.5; }
-  .avail-week { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin-bottom:14px; }
-  .avail-day { text-align:center; }
-  .avail-day-name { font-size:9px; color:var(--text2); font-weight:600; margin-bottom:3px; }
-  .avail-num { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600; margin:0 auto; cursor:pointer; }
-  .avail-num.on { background:var(--primary-light); color:var(--primary-dark); }
-  .avail-num.sel { background:var(--primary); color:white; }
-  .avail-num.off { color:var(--border); cursor:default; }
-  .sticky-book { position:absolute; bottom:0; left:0; right:0; background:white; padding:12px 20px 18px; border-top:1px solid var(--border); }
-
-  /* BOOKING */
-  .booking-summary { background:white; margin:14px 20px 0; border-radius:var(--radius); padding:14px; box-shadow:var(--shadow); display:flex; gap:12px; align-items:center; }
-  .bk-info { flex:1; }
-  .bk-name { font-size:15px; font-weight:700; color:var(--text); }
-  .bk-service { font-size:13px; color:var(--text2); margin-top:2px; }
-  .bk-content { padding:0 20px 90px; }
-  .bk-section { margin-top:18px; }
-  .bk-section-title { font-size:14px; font-weight:700; color:var(--text); margin-bottom:9px; }
-  .date-chips { display:flex; gap:7px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none; }
-  .date-chips::-webkit-scrollbar { display:none; }
-  .dchip { flex-shrink:0; padding:9px 12px; border-radius:var(--radius-sm); border:1.5px solid var(--border); background:white; cursor:pointer; text-align:center; transition:all .2s; }
-  .dchip.sel { background:var(--primary); border-color:var(--primary); }
-  .dchip .dn { font-size:10px; font-weight:600; color:var(--text2); }
-  .dchip .dd { font-size:17px; font-weight:700; color:var(--text); }
-  .dchip.sel .dn,.dchip.sel .dd { color:white; }
-  .time-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; }
-  .tslot { padding:11px; border-radius:var(--radius-sm); border:1.5px solid var(--border); background:white; cursor:pointer; text-align:center; font-size:14px; font-weight:600; color:var(--text); transition:all .2s; font-family:'Inter',sans-serif; }
-  .tslot.sel { background:var(--primary); border-color:var(--primary); color:white; }
-  .tslot.taken { background:var(--bg); color:var(--border); cursor:not-allowed; }
-  .dur-sel { display:flex; border:1.5px solid var(--border); border-radius:var(--radius-sm); overflow:hidden; }
-  .dur-btn { flex:1; padding:11px; background:white; border:none; font-size:14px; font-weight:600; color:var(--text2); cursor:pointer; font-family:'Inter',sans-serif; transition:all .2s; }
-  .dur-btn.sel { background:var(--primary); color:white; }
-  .dur-btn+.dur-btn { border-left:1.5px solid var(--border); }
-  .sticky-bottom { position:absolute; bottom:0; left:0; right:0; background:white; padding:12px 20px 18px; border-top:1px solid var(--border); }
-
-  /* PAYMENT */
-  .pay-content { padding:14px 20px 90px; }
-  .order-card { background:white; border-radius:var(--radius); padding:15px; box-shadow:var(--shadow); margin-bottom:14px; }
-  .order-card h3 { font-size:15px; font-weight:700; color:var(--text); margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--border); }
-  .pay-method { display:flex; align-items:center; gap:12px; padding:13px; border-radius:var(--radius-sm); border:2px solid var(--border); background:white; cursor:pointer; transition:all .2s; margin-bottom:8px; }
-  .pay-method.sel { border-color:var(--primary); background:var(--primary-light); }
-  .pay-icon { font-size:22px; }
-  .pay-name { flex:1; font-size:15px; font-weight:600; color:var(--text); }
-  .radio-dot { width:18px; height:18px; border-radius:50%; border:2px solid var(--border); display:flex; align-items:center; justify-content:center; }
-  .pay-method.sel .radio-dot { border-color:var(--primary); }
-  .radio-inner { width:10px; height:10px; border-radius:50%; background:var(--primary); display:none; }
-  .pay-method.sel .radio-inner { display:block; }
-  .card-fields { background:var(--bg); border-radius:var(--radius-sm); padding:13px; margin-top:8px; }
-  .card-row { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:9px; }
-  .card-fields .form-input { background:white; }
-
-  /* CONFIRMATION */
-  #screen-confirmation { background:white; top:0; }
-  .confirm-inner { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:36px 28px; text-align:center; }
-  .confirm-icon { width:100px; height:100px; border-radius:50%; background:linear-gradient(135deg,var(--primary),var(--success)); display:flex; align-items:center; justify-content:center; margin-bottom:22px; animation:popIn .5s cubic-bezier(.34,1.56,.64,1); }
-  @keyframes popIn { from{transform:scale(0)} to{transform:scale(1)} }
-  .confirm-icon svg { width:50px; height:50px; color:white; }
-  .confirm-inner h2 { font-size:25px; font-weight:800; color:var(--text); }
-  .confirm-inner p { font-size:14px; color:var(--text2); margin-top:8px; line-height:1.5; }
-  .confirm-card { background:var(--bg); border-radius:var(--radius); padding:15px; margin:20px 0; width:100%; text-align:left; }
-  .crow { display:flex; justify-content:space-between; font-size:13px; margin-bottom:7px; }
-  .crow:last-child { margin-bottom:0; }
-  .crow span:first-child { color:var(--text2); }
-  .crow span:last-child { font-weight:600; color:var(--text); }
-
-  /* BOOKINGS */
-  .hist-tabs { display:flex; background:white; border-bottom:1px solid var(--border); flex-shrink:0; }
-  .htab { flex:1; padding:12px; text-align:center; font-size:13px; font-weight:600; color:var(--text2); cursor:pointer; border-bottom:2px solid transparent; border-top:none; border-left:none; border-right:none; background:none; font-family:'Inter',sans-serif; transition:all .2s; }
-  .htab.active { color:var(--primary); border-bottom-color:var(--primary); }
-  .bk-item { background:white; margin:11px 20px 0; border-radius:var(--radius); padding:15px; box-shadow:var(--shadow); }
-  .bk-item-top { display:flex; align-items:center; gap:12px; margin-bottom:11px; }
-  .bk-item-info { flex:1; }
-  .bk-item-name { font-size:15px; font-weight:700; color:var(--text); }
-  .bk-item-service { font-size:13px; color:var(--text2); margin-top:2px; }
-  .bk-item-bottom { display:flex; justify-content:space-between; align-items:center; padding-top:11px; border-top:1px solid var(--border); }
-  .bk-item-date { font-size:13px; color:var(--text2); }
-  .bk-item-price { font-size:15px; font-weight:700; color:var(--text); }
-
-  /* PROFILE */
-  .profile-header { background:linear-gradient(180deg,var(--primary),var(--primary-dark)); padding:36px 20px 44px; display:flex; flex-direction:column; align-items:center; color:white; }
-  .profile-av { width:78px; height:78px; border-radius:50%; background:rgba(255,255,255,.2); border:3px solid white; display:flex; align-items:center; justify-content:center; font-size:30px; font-weight:700; margin-bottom:10px; }
-  .profile-name { font-size:20px; font-weight:800; }
-  .profile-email { font-size:13px; opacity:.8; margin-top:2px; }
-  .loyalty-card { background:linear-gradient(135deg,#1A1A2E,#16213E); color:white; margin:14px 20px 0; border-radius:var(--radius); padding:16px; }
-  .loyalty-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
-  .loyalty-level { font-size:16px; font-weight:700; }
-  .loyalty-progress-bg { background:rgba(255,255,255,.2); border-radius:10px; height:8px; }
-  .loyalty-progress-fill { background:linear-gradient(90deg,var(--primary),#26C6DA); border-radius:10px; height:8px; }
-  .loyalty-text { font-size:12px; opacity:.7; margin-top:7px; }
-  .menu-list { background:white; margin:14px 20px 0; border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); }
-  .menu-item { display:flex; align-items:center; gap:13px; padding:14px 16px; cursor:pointer; border-bottom:1px solid var(--border); transition:background .2s; }
-  .menu-item:last-child { border-bottom:none; }
-  .menu-item:active { background:var(--bg); }
-  .menu-icon { font-size:18px; width:34px; height:34px; border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:center; }
-  .menu-label { flex:1; font-size:15px; font-weight:500; color:var(--text); }
-  .menu-arrow { color:var(--text2); font-size:18px; }
-
-  .loading-overlay { position:absolute; inset:0; background:rgba(255,255,255,.92); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:100; }
-  .spinner { width:44px; height:44px; border:4px solid var(--border); border-top-color:var(--primary); border-radius:50%; animation:spin .8s linear infinite; }
-  @keyframes spin { to{transform:rotate(360deg)} }
-  .loading-overlay p { margin-top:14px; font-size:14px; font-weight:600; color:var(--text2); }
-
-  .dsect-title { font-size:14px; font-weight:700; color:var(--text); margin:14px 0 8px; }
-  .dsect-title:first-child { margin-top:0; }
-  textarea.form-input { resize:none; }
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-
 <div class="demo-header">
   <h1>🏠 Qyzmet</h1>
   <p>Book. Pay. Relax. — Démo Interactive</p>
-  <div class="breadcrumb" id="breadcrumb">Écran : Splash</div>
+  <div class="breadcrumb" id="breadcrumb">Écran : Bienvenue</div>
 </div>
 
 <div class="phone">
-
-  <!-- Status Bar -->
   <div class="status-bar" id="sb" style="display:none">
     <span class="time">9:41</span>
     <div class="status-icons">📶 🔋</div>
   </div>
 
-  <!-- ══ SPLASH ══ -->
-  <div class="screen active" id="screen-splash" style="top:0;background:linear-gradient(160deg,#0097A7,#00BCD4);align-items:center;justify-content:center">
-    <div class="splash-logo">
-      <div class="splash-house">🏠</div>
+  <!-- WELCOME: LANG + ROLE -->
+  <div class="screen active notop" id="screen-welcome">
+    <div class="welcome-lang" onclick="openLangModal()">🌐 <span id="welcome-lang-label">Русский</span> ▾</div>
+    <div class="welcome-logo">
+      <div class="ic">🏠</div>
       <h1>Qyzmet</h1>
       <p>Book. Pay. Relax.</p>
-      <div class="splash-dots">
-        <div class="splash-dot"></div><div class="splash-dot"></div><div class="splash-dot"></div>
-      </div>
+    </div>
+    <div class="role-card" onclick="selectRole('client')">
+      <div class="ric">🙋</div>
+      <div><h3>Je suis Client</h3><p>Je cherche un service à domicile à Astana</p></div>
+    </div>
+    <div class="role-card" onclick="selectRole('provider')">
+      <div class="ric">🛠️</div>
+      <div><h3>Je suis Prestataire</h3><p>Je propose mes services et je gagne de l'argent</p></div>
     </div>
   </div>
 
-  <!-- ══ ONBOARDING ══ -->
-  <div class="screen" id="screen-onboarding" style="top:0;background:white">
+  <!-- LANGUAGE MODAL -->
+  <div class="modal-overlay" id="lang-modal">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <h3 style="font-size:17px;font-weight:800;margin-bottom:14px">Choisir la langue</h3>
+      <div class="lang-modal-item sel" id="lang-ru" onclick="selectLang('ru','Русский')"><span class="flag">🇷🇺</span><span class="lname">Русский (par défaut)</span><span class="check">✓</span></div>
+      <div class="lang-modal-item" id="lang-kk" onclick="selectLang('kk','Қазақша')"><span class="flag">🇰🇿</span><span class="lname">Қазақша</span><span class="check">✓</span></div>
+      <div class="lang-modal-item" id="lang-en" onclick="selectLang('en','English')"><span class="flag">🇬🇧</span><span class="lname">English</span><span class="check">✓</span></div>
+      <button class="btn btn-primary" style="margin-top:8px" onclick="closeLangModal()">Confirmer</button>
+    </div>
+  </div>
+
+  <!-- SPLASH -->
+  <div class="screen notop" id="screen-splash" style="background:linear-gradient(160deg,#0097A7,#00BCD4);align-items:center;justify-content:center">
+    <div style="text-align:center;color:#fff">
+      <div style="font-size:80px;animation:pulse 2s infinite">🏠</div>
+      <h1 style="font-size:42px;font-weight:800;margin-top:10px">Qyzmet</h1>
+      <p style="font-size:16px;opacity:.85;margin-top:6px">Book. Pay. Relax.</p>
+    </div>
+  </div>
+
+  <!-- ONBOARDING -->
+  <div class="screen notop" id="screen-onboarding" style="background:#fff">
     <div class="onboard-slides">
-      <div class="onboard-slide active" id="sl0"><div class="onboard-icon">⚡</div><h2>Réservez en 60 secondes</h2><p>Trouvez le professionnel parfait et réservez instantanément depuis votre téléphone.</p></div>
-      <div class="onboard-slide" id="sl1"><div class="onboard-icon">🛡️</div><h2>Prestataires vérifiés</h2><p>Chaque professionnel est vérifié par notre équipe. Photo, pièce d'identité et références contrôlées.</p></div>
-      <div class="onboard-slide" id="sl2"><div class="onboard-icon">🔒</div><h2>Paiement sécurisé</h2><p>Carte, Apple Pay ou Google Pay. Votre argent est protégé jusqu'à la fin de la mission.</p></div>
+      <div class="onboard-slide active" id="sl0"><div class="onboard-illu">⚡</div><h2>Réservez en 60 secondes</h2><p>Trouvez le professionnel parfait et réservez instantanément depuis votre téléphone.</p></div>
+      <div class="onboard-slide" id="sl1"><div class="onboard-illu">🛡️</div><h2>Prestataires 100% vérifiés</h2><p>Pièce d'identité, selfie et entretien obligatoires avant validation du profil.</p></div>
+      <div class="onboard-slide" id="sl2"><div class="onboard-illu">💰</div><h2>Cashback sur chaque réservation</h2><p>Gagnez 5% en Qyzmet Coins à chaque mission, utilisables sur vos prochaines commandes.</p></div>
     </div>
     <div class="onboard-bottom">
       <div class="onboard-dots"><div class="onboard-dot active" id="od0"></div><div class="onboard-dot" id="od1"></div><div class="onboard-dot" id="od2"></div></div>
-      <button class="btn btn-primary" id="ob-next">Suivant →</button>
+      <button class="btn btn-primary" id="ob-next" onclick="nextSlide()">Suivant →</button>
       <a class="skip-link" onclick="goTo('login')">Passer</a>
     </div>
   </div>
 
-  <!-- ══ LOGIN ══ -->
-  <div class="screen" id="screen-login" style="top:0;background:white">
+  <!-- LOGIN -->
+  <div class="screen notop" id="screen-login" style="background:#fff">
     <div class="screen-scroll"><div class="login-inner">
       <div class="login-logo"><div class="icon">🏠</div><h2>Qyzmet</h2><p>Book. Pay. Relax.</p></div>
+      <div style="text-align:center;margin-bottom:14px"><span class="badge badge-primary" id="login-role-tag">Espace Client</span></div>
       <p class="login-title">Connexion</p>
       <div class="form-group"><label>Email</label><input class="form-input" type="email" value="aigerim@gmail.com"></div>
       <div class="form-group"><label>Mot de passe</label><input class="form-input" type="password" value="••••••••"></div>
-      <div style="text-align:right;margin-bottom:14px"><a style="font-size:13px;color:var(--primary);cursor:pointer;font-weight:600">Mot de passe oublié ?</a></div>
-      <button class="btn btn-primary" onclick="goTo('home')">Se connecter</button>
+      <div style="text-align:right;margin-bottom:14px"><a style="font-size:13px;color:var(--primary);cursor:pointer;font-weight:700">Mot de passe oublié ?</a></div>
+      <button class="btn btn-primary" onclick="loginAs()">Se connecter</button>
       <div class="divider">ou</div>
-      <button class="btn btn-white" onclick="goTo('home')"><svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>Continuer avec Google</button>
-      <button class="btn btn-black" onclick="goTo('home')"><svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.7 9.05 7.42c1.28.06 2.16.73 3.02.76 1.15-.23 2.25-.93 3.47-.84 1.45.12 2.55.68 3.27 1.73-3.01 1.74-2.49 5.88.5 7.01-.57 1.5-1.3 2.96-2.26 4.2zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>Continuer avec Apple</button>
+      <button class="btn btn-white" onclick="loginAs()"><svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>Continuer avec Google</button>
+      <button class="btn btn-black" onclick="loginAs()"><svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.7 9.05 7.42c1.28.06 2.16.73 3.02.76 1.15-.23 2.25-.93 3.47-.84 1.45.12 2.55.68 3.27 1.73-3.01 1.74-2.49 5.88.5 7.01-.57 1.5-1.3 2.96-2.26 4.2zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>Continuer avec Apple</button>
       <button class="btn btn-outline" onclick="goTo('phone-auth')">📱 Numéro de téléphone</button>
-      <p class="link-text">Pas de compte ? <a onclick="goTo('home')">S'inscrire</a></p>
+      <p class="link-text">Pas de compte ? <a onclick="loginAs()">S'inscrire</a></p>
     </div></div>
   </div>
 
-  <!-- ══ PHONE AUTH ══ -->
-  <div class="screen" id="screen-phone-auth" style="top:0;background:white">
+  <!-- PHONE AUTH -->
+  <div class="screen notop" id="screen-phone-auth" style="background:#fff">
     <div class="screen-scroll"><div class="login-inner">
-      <button class="back-btn" onclick="goTo('login')" style="padding:0;margin-bottom:20px;font-size:15px;font-weight:600;color:var(--primary)">← Retour</button>
+      <button class="back-btn" onclick="goTo('login')" style="margin-bottom:20px">←</button>
       <p class="login-title">Mon numéro</p>
       <p style="font-size:14px;color:var(--text2);margin-bottom:18px">Entrez votre numéro pour recevoir un SMS</p>
       <div class="form-group"><label>Téléphone</label><input class="form-input" type="tel" value="+7 701 234 56 78"></div>
-      <button class="btn btn-primary" onclick="document.getElementById('otp-section').style.display='block'">Envoyer le code SMS</button>
+      <button class="btn btn-primary" onclick="showOTP()">Envoyer le code SMS</button>
       <div id="otp-section" style="display:none;margin-top:18px">
         <div class="form-group"><label>Code de vérification</label><input class="form-input" type="text" value="1 2 3 4 5 6" style="text-align:center;letter-spacing:8px;font-size:20px;font-weight:700"></div>
-        <button class="btn btn-primary" onclick="goTo('home')">Vérifier →</button>
+        <button class="btn btn-primary" onclick="loginAs()">Vérifier →</button>
         <p class="link-text">Renvoyer dans <a>00:42</a></p>
       </div>
     </div></div>
   </div>
 
-  <!-- ══ HOME ══ -->
+  <!-- HOME (CLIENT) -->
   <div class="screen" id="screen-home">
     <div class="screen-scroll">
       <div class="home-header">
-        <div class="home-greeting">Bonjour, Aigerim 👋</div>
-        <div class="home-loc">📍 Astana, Kazakhstan</div>
+        <div class="home-top">
+          <div>
+            <div class="home-greeting">Bonjour, Aigerim 👋</div>
+            <div class="home-loc">📍 Astana, Kazakhstan</div>
+          </div>
+          <div class="avatar av-md av-purple" onclick="goTo('profile')" style="cursor:pointer">АМ</div>
+        </div>
+        <div class="home-cashback-pill">💰 2 450 Qyzmet Coins disponibles</div>
         <div class="search-bar" onclick="goTo('search')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input placeholder="Quel service cherchez-vous ?" readonly></div>
       </div>
-      <div class="section"><div class="section-title">Catégories</div>
-        <div class="categories">
-          <div class="cat-card" onclick="goTo('providers-list')"><div class="cat-icon">🧹</div><div class="cat-name">Femme de ménage</div><div class="cat-price">dès 3 500 ₸/h</div></div>
-          <div class="cat-card" onclick="goTo('providers-list')"><div class="cat-icon">👶</div><div class="cat-name">Baby-sitter</div><div class="cat-price">dès 2 500 ₸/h</div></div>
-          <div class="cat-card" onclick="goTo('providers-list')"><div class="cat-icon">🔧</div><div class="cat-name">Bricolage</div><div class="cat-price">dès 4 000 ₸/h</div></div>
-          <div class="cat-card" onclick="goTo('providers-list')"><div class="cat-icon">🏠</div><div class="cat-name">Rénovation</div><div class="cat-price">dès 8 000 ₸/h</div></div>
+      <div class="section">
+        <div class="scroll-row" style="padding-bottom:4px">
+          <div class="cashback-banner" onclick="goTo('premium')"><div style="font-size:28px">🎁</div><div><div style="font-weight:800;font-size:14px">5% de cashback sur chaque réservation</div><div style="font-size:11px;opacity:.85;margin-top:2px">Vos Coins sont utilisables immédiatement</div></div></div>
+          <div class="promo-banner"><div style="font-size:28px">☀️</div><div><div style="font-weight:800;font-size:14px">-20% sur le ménage ce weekend</div><div style="font-size:11px;opacity:.8;margin-top:2px">Code ASTANA20 · jusqu'à dimanche</div></div></div>
         </div>
       </div>
-      <div class="section" style="margin-top:18px"><div class="section-title">Recommandés pour vous</div></div>
-      <div class="prov-scroll">
-        <div class="prov-mini" onclick="goTo('provider-detail')"><div class="avatar av-lg av-purple">АМ</div><div class="prov-name">Алия М.</div><div class="stars">★★★★★ <span style="color:var(--text2)">4.9</span></div><div class="prov-price" style="margin-top:6px">3 500 ₸/h</div><div class="badge badge-success" style="margin-top:6px">● Dispo</div></div>
-        <div class="prov-mini" onclick="goTo('provider-detail')"><div class="avatar av-lg av-blue">ДК</div><div class="prov-name">Дамир К.</div><div class="stars">★★★★★ <span style="color:var(--text2)">4.8</span></div><div class="prov-price" style="margin-top:6px">4 500 ₸/h</div><div class="badge badge-success" style="margin-top:6px">● Dispo</div></div>
-        <div class="prov-mini" onclick="goTo('provider-detail')"><div class="avatar av-lg av-pink">ГС</div><div class="prov-name">Гульнара С.</div><div class="stars">★★★★☆ <span style="color:var(--text2)">4.7</span></div><div class="prov-price" style="margin-top:6px">3 000 ₸/h</div><div class="badge badge-warning" style="margin-top:6px">⏱ Dans 2h</div></div>
-        <div class="prov-mini" onclick="goTo('provider-detail')"><div class="avatar av-lg av-green">НА</div><div class="prov-name">Назгуль А.</div><div class="stars">★★★★★ <span style="color:var(--text2)">5.0</span></div><div class="prov-price" style="margin-top:6px">3 800 ₸/h</div><div class="badge badge-success" style="margin-top:6px">● Dispo</div></div>
+      <div class="section" style="margin-top:18px"><div class="section-title">Catégories</div>
+        <div class="categories">
+          <div class="cat-card" onclick="goTo('providers-list')"><div class="cat-iconwrap" style="background:#E0F7FA">🧹</div><div class="cat-name">Femme de ménage</div><div class="cat-price">dès 3 500 ₸/h</div></div>
+          <div class="cat-card" onclick="goTo('providers-list')"><div class="cat-iconwrap" style="background:#F3E8FF">👶</div><div class="cat-name">Baby-sitter</div><div class="cat-price">dès 2 500 ₸/h</div></div>
+          <div class="cat-card" onclick="goTo('providers-list')"><div class="cat-iconwrap" style="background:#FFEDD5">🔧</div><div class="cat-name">Bricolage</div><div class="cat-price">dès 4 000 ₸/h</div></div>
+          <div class="cat-card" onclick="goTo('providers-list')"><div class="cat-iconwrap" style="background:#DCFCE7">🏗️</div><div class="cat-name">Rénovation</div><div class="cat-price">dès 8 000 ₸/h</div></div>
+        </div>
+      </div>
+      <div class="section" style="margin-top:18px"><div class="section-title">Populaires près de vous</div></div>
+      <div class="scroll-row" style="padding:0 20px 18px">
+        <div class="prov-mini" onclick="goTo('provider-detail')"><div class="avatar av-lg av-purple">АМ<span class="av-verified">✓</span></div><div class="prov-name">Алия М.</div><div class="stars">★★★★★ <span style="color:var(--text2)">4.9</span></div><div class="prov-price" style="margin-top:6px">3 500 ₸/h</div><div class="badge badge-success" style="margin-top:6px">● Dispo</div></div>
+        <div class="prov-mini" onclick="goTo('provider-detail')"><div class="avatar av-lg av-blue">ДК<span class="av-verified">✓</span></div><div class="prov-name">Дамир К.</div><div class="stars">★★★★★ <span style="color:var(--text2)">4.8</span></div><div class="prov-price" style="margin-top:6px">4 500 ₸/h</div><div class="badge badge-success" style="margin-top:6px">● Dispo</div></div>
+        <div class="prov-mini" onclick="goTo('provider-detail')"><div class="avatar av-lg av-pink">ГС<span class="av-verified">✓</span></div><div class="prov-name">Гульнара С.</div><div class="stars">★★★★☆ <span style="color:var(--text2)">4.7</span></div><div class="prov-price" style="margin-top:6px">3 000 ₸/h</div><div class="badge badge-warning" style="margin-top:6px">⏱ 2h</div></div>
+        <div class="prov-mini" onclick="goTo('provider-detail')"><div class="avatar av-lg av-green">НА<span class="av-verified">✓</span></div><div class="prov-name">Назгуль А.</div><div class="stars">★★★★★ <span style="color:var(--text2)">5.0</span></div><div class="prov-price" style="margin-top:6px">3 800 ₸/h</div><div class="badge badge-success" style="margin-top:6px">● Dispo</div></div>
       </div>
       <div class="section" style="padding-bottom:20px">
-        <div style="background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:var(--radius);padding:16px;color:white;display:flex;align-items:center;gap:12px"><div style="font-size:32px">🎁</div><div><div style="font-size:14px;font-weight:700">Programme fidélité</div><div style="font-size:12px;opacity:.85;margin-top:3px">5% de réduction dès votre 5ème réservation</div></div></div>
+        <div class="premium-banner" onclick="goTo('premium')">
+          <div class="pic">✨</div>
+          <div><h4>Qyzmet Premium</h4><p>-15% à vie + annulation gratuite + support prioritaire</p></div>
+        </div>
       </div>
     </div>
+    <div class="fab-chat" onclick="goTo('chat')">💬</div>
     <div class="tab-bar">
       <button class="tab-item active" onclick="goTo('home')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>Accueil</button>
       <button class="tab-item" onclick="goTo('search')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>Recherche</button>
@@ -367,20 +158,20 @@
     </div>
   </div>
 
-  <!-- ══ SEARCH ══ -->
+  <!-- SEARCH -->
   <div class="screen" id="screen-search">
-    <div style="background:white;padding:12px 20px;border-bottom:1px solid var(--border)"><div class="search-bar" style="border:1.5px solid var(--primary)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input placeholder="Quel service ?" style="border:none;outline:none;font-size:14px;font-family:Inter,sans-serif;flex:1"></div></div>
+    <div style="background:#fff;padding:12px 20px;border-bottom:1px solid var(--border)"><div class="search-bar" style="border:1.5px solid var(--primary)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input placeholder="Quel service ?" style="border:none;outline:none;font-size:14px;font-family:Inter,sans-serif;flex:1"></div></div>
     <div class="screen-scroll" style="padding:16px 20px">
-      <p style="font-size:14px;font-weight:700;margin-bottom:10px">Recherches populaires</p>
+      <p style="font-size:14px;font-weight:800;margin-bottom:10px">Recherches populaires</p>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px">
         <div class="chip active" onclick="goTo('providers-list')">🧹 Femme de ménage</div>
         <div class="chip" onclick="goTo('providers-list')">👶 Baby-sitter</div>
         <div class="chip" onclick="goTo('providers-list')">🔧 Bricolage</div>
-        <div class="chip" onclick="goTo('providers-list')">🏠 Rénovation</div>
+        <div class="chip" onclick="goTo('providers-list')">🏗️ Rénovation</div>
       </div>
-      <p style="font-size:14px;font-weight:700;margin-bottom:10px">Disponibles maintenant</p>
-      <div class="prov-card" onclick="goTo('provider-detail')" style="margin:0 0 10px"><div class="avatar av-md av-purple">АМ</div><div class="prov-card-info"><div class="prov-card-name">Алия Мұратова <span class="verified">✓</span></div><div class="prov-card-meta">🧹 Femme de ménage · ⭐ 4.9 · 127 avis</div><div class="prov-card-bottom"><div class="prov-card-price">3 500 ₸/h</div><div class="badge badge-success">● Dispo</div></div></div></div>
-      <div class="prov-card" onclick="goTo('provider-detail')" style="margin:0 0 10px"><div class="avatar av-md av-blue">ДК</div><div class="prov-card-info"><div class="prov-card-name">Дамир Қасымов <span class="verified">✓</span></div><div class="prov-card-meta">🔧 Bricolage · ⭐ 4.8 · 89 avis</div><div class="prov-card-bottom"><div class="prov-card-price">4 500 ₸/h</div><div class="badge badge-success">● Dispo</div></div></div></div>
+      <p style="font-size:14px;font-weight:800;margin-bottom:10px">Disponibles maintenant</p>
+      <div class="prov-card" onclick="goTo('provider-detail')" style="margin:0 0 10px"><div class="avatar av-md av-purple">АМ<span class="av-verified">✓</span></div><div class="prov-card-info"><div class="prov-card-name">Алия Мұратова</div><div class="prov-card-meta">🧹 Femme de ménage · ⭐ 4.9 · 127 avis</div><div class="prov-card-bottom"><div class="prov-card-price">3 500 ₸/h</div><div class="badge badge-success">● Dispo</div></div></div></div>
+      <div class="prov-card" onclick="goTo('provider-detail')" style="margin:0 0 10px"><div class="avatar av-md av-blue">ДК<span class="av-verified">✓</span></div><div class="prov-card-info"><div class="prov-card-name">Дамир Қасымов</div><div class="prov-card-meta">🔧 Bricolage · ⭐ 4.8 · 89 avis</div><div class="prov-card-bottom"><div class="prov-card-price">4 500 ₸/h</div><div class="badge badge-success">● Dispo</div></div></div></div>
     </div>
     <div class="tab-bar">
       <button class="tab-item" onclick="goTo('home')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>Accueil</button>
@@ -390,26 +181,26 @@
     </div>
   </div>
 
-  <!-- ══ PROVIDERS LIST ══ -->
+  <!-- PROVIDERS LIST -->
   <div class="screen" id="screen-providers-list">
-    <div class="top-bar"><button class="back-btn" onclick="goTo('home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button><span class="top-bar-title">Femme de ménage</span></div>
+    <div class="top-bar"><button class="back-btn" onclick="goTo('home')">←</button><span class="top-bar-title">Femme de ménage (24)</span></div>
     <div class="filters-scroll">
-      <button class="chip active">Tous</button><button class="chip">⭐ Mieux notés</button><button class="chip">♀ Femme</button><button class="chip">♂ Homme</button><button class="chip">⚡ Dispo maintenant</button>
+      <button class="chip active">Tous</button><button class="chip">⭐ Top</button><button class="chip">♀ Femme</button><button class="chip">♂ Homme</button><button class="chip">⚡ Dispo</button>
     </div>
     <div class="screen-scroll" style="padding-bottom:20px">
-      <div class="prov-card" onclick="goTo('provider-detail')"><div class="avatar av-md av-purple">АМ</div><div class="prov-card-info"><div class="prov-card-name">Алия Мұратова <span class="verified">✓</span></div><div class="prov-card-meta">⭐ 4.9 · 127 avis · ⏱ 15 min</div><div style="margin-top:5px"><span class="serv-chip">Ménage complet</span><span class="serv-chip">Repassage</span></div><div class="prov-card-bottom"><div class="prov-card-price">3 500 ₸/h</div><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();goTo('booking')">Réserver</button></div></div></div>
-      <div class="prov-card" onclick="goTo('provider-detail')"><div class="avatar av-md av-pink">ГС</div><div class="prov-card-info"><div class="prov-card-name">Гульнара Сейткали <span class="verified">✓</span></div><div class="prov-card-meta">⭐ 4.7 · 84 avis · ⏱ 30 min</div><div style="margin-top:5px"><span class="serv-chip">Ménage complet</span><span class="serv-chip">Vitres</span></div><div class="prov-card-bottom"><div class="prov-card-price">3 000 ₸/h</div><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();goTo('booking')">Réserver</button></div></div></div>
-      <div class="prov-card" onclick="goTo('provider-detail')"><div class="avatar av-md av-green">НА</div><div class="prov-card-info"><div class="prov-card-name">Назгуль Әбенова <span class="verified">✓</span></div><div class="prov-card-meta">⭐ 5.0 · 53 avis · ⏱ 5 min</div><div style="margin-top:5px"><span class="serv-chip">Ménage complet</span></div><div class="prov-card-bottom"><div class="prov-card-price">3 800 ₸/h</div><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();goTo('booking')">Réserver</button></div></div></div>
-      <div class="prov-card" onclick="goTo('provider-detail')"><div class="avatar av-md av-orange">МТ</div><div class="prov-card-info"><div class="prov-card-name">Мадина Тоқтарова <span class="verified">✓</span></div><div class="prov-card-meta">⭐ 4.6 · 41 avis · ⏱ 1h</div><div style="margin-top:5px"><span class="serv-chip">Repassage</span></div><div class="prov-card-bottom"><div class="prov-card-price">2 800 ₸/h</div><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();goTo('booking')">Réserver</button></div></div></div>
+      <div class="prov-card" onclick="goTo('provider-detail')"><div class="avatar av-md av-purple">АМ<span class="av-verified">✓</span></div><div class="prov-card-info"><div class="prov-card-name">Алия Мұратова <span class="verified">✓</span></div><div class="prov-card-meta">⭐ 4.9 · 127 avis · 1.2 km · ~10 min</div><div style="margin-top:5px"><span class="serv-chip">Ménage complet</span><span class="serv-chip">Repassage</span></div><div class="prov-card-bottom"><div class="prov-card-price">3 500 ₸/h</div><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();goTo('booking')">Réserver</button></div></div></div>
+      <div class="prov-card" onclick="goTo('provider-detail')"><div class="avatar av-md av-pink">ГС<span class="av-verified">✓</span></div><div class="prov-card-info"><div class="prov-card-name">Гульнара Сейткали <span class="verified">✓</span></div><div class="prov-card-meta">⭐ 4.7 · 84 avis · 2.4 km · ~30 min</div><div style="margin-top:5px"><span class="serv-chip">Ménage complet</span><span class="serv-chip">Vitres</span></div><div class="prov-card-bottom"><div class="prov-card-price">3 000 ₸/h</div><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();goTo('booking')">Réserver</button></div></div></div>
+      <div class="prov-card" onclick="goTo('provider-detail')"><div class="avatar av-md av-green">НА<span class="av-verified">✓</span></div><div class="prov-card-info"><div class="prov-card-name">Назгуль Әбенова <span class="verified">✓</span></div><div class="prov-card-meta">⭐ 5.0 · 53 avis · 0.8 km · ~5 min</div><div style="margin-top:5px"><span class="serv-chip">Ménage complet</span></div><div class="prov-card-bottom"><div class="prov-card-price">3 800 ₸/h</div><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();goTo('booking')">Réserver</button></div></div></div>
+      <div class="prov-card" onclick="goTo('provider-detail')"><div class="avatar av-md av-orange">МТ<span class="av-verified">✓</span></div><div class="prov-card-info"><div class="prov-card-name">Мадина Тоқтарова <span class="verified">✓</span></div><div class="prov-card-meta">⭐ 4.6 · 41 avis · 3.1 km · ~1h</div><div style="margin-top:5px"><span class="serv-chip">Repassage</span></div><div class="prov-card-bottom"><div class="prov-card-price">2 800 ₸/h</div><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();goTo('booking')">Réserver</button></div></div></div>
     </div>
   </div>
 
-  <!-- ══ PROVIDER DETAIL ══ -->
+  <!-- PROVIDER DETAIL -->
   <div class="screen" id="screen-provider-detail">
     <div class="screen-scroll" style="padding-bottom:76px">
       <div class="detail-hero">
-        <button class="detail-back" onclick="goTo('providers-list')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
-        <div class="detail-av av-purple">АМ</div>
+        <button class="detail-back" onclick="goTo('providers-list')">←</button>
+        <div class="avatar detail-av av-xl av-purple">АМ<span class="av-verified" style="width:24px;height:24px;font-size:13px">✓</span></div>
         <div class="detail-name">Алия Мұратова</div>
         <div class="detail-job">🧹 Femme de ménage · Astana</div>
         <div class="detail-stats">
@@ -421,7 +212,7 @@
       </div>
       <div class="dtabs">
         <button class="dtab active" onclick="switchTab(0)">À propos</button>
-        <button class="dtab" onclick="switchTab(1)">Avis</button>
+        <button class="dtab" onclick="switchTab(1)">Avis (127)</button>
         <button class="dtab" onclick="switchTab(2)">Disponibilités</button>
       </div>
       <div class="tcontent active" id="tc0">
@@ -430,9 +221,9 @@
         <div><span class="serv-chip">Ménage complet</span><span class="serv-chip">Repassage</span><span class="serv-chip">Vitres</span><span class="serv-chip">Après déménagement</span></div>
         <div class="dsect-title">Tarifs</div>
         <div style="background:var(--bg);border-radius:var(--radius-sm);padding:12px">
-          <div class="price-row"><span>Tarif horaire</span><span style="font-weight:700;color:var(--text)">3 500 ₸</span></div>
-          <div class="price-row"><span>Durée minimum</span><span style="font-weight:700;color:var(--text)">2 heures</span></div>
-          <div class="price-row"><span>Déplacement</span><span style="font-weight:600;color:var(--success)">Offert</span></div>
+          <div class="price-row"><span>Tarif horaire</span><span style="font-weight:800;color:var(--text)">3 500 ₸</span></div>
+          <div class="price-row"><span>Durée minimum</span><span style="font-weight:800;color:var(--text)">2 heures</span></div>
+          <div class="price-row"><span>Déplacement</span><span style="font-weight:700;color:var(--success)">Offert</span></div>
         </div>
         <div class="dsect-title">Langues</div>
         <div><span class="serv-chip">🇷🇺 Russe</span><span class="serv-chip">🇰🇿 Kazakh</span></div>
@@ -460,11 +251,11 @@
     <div class="sticky-book"><button class="btn btn-primary" onclick="goTo('booking')" style="margin:0">Réserver maintenant — 3 500 ₸/h</button></div>
   </div>
 
-  <!-- ══ BOOKING ══ -->
+  <!-- BOOKING -->
   <div class="screen" id="screen-booking">
-    <div class="top-bar"><button class="back-btn" onclick="goTo('provider-detail')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button><span class="top-bar-title">Réservation</span></div>
+    <div class="top-bar"><button class="back-btn" onclick="goTo('provider-detail')">←</button><span class="top-bar-title">Réservation</span></div>
     <div class="screen-scroll" style="padding-bottom:80px">
-      <div class="booking-summary"><div class="avatar av-md av-purple">АМ</div><div class="bk-info"><div class="bk-name">Алия Мұратова</div><div class="bk-service">🧹 Femme de ménage · 3 500 ₸/h</div></div><span class="badge badge-success">✓</span></div>
+      <div class="booking-summary"><div class="avatar av-md av-purple">АМ<span class="av-verified">✓</span></div><div class="bk-info"><div class="bk-name">Алия Мұратова</div><div class="bk-service">🧹 Femme de ménage · 3 500 ₸/h</div></div><span class="badge badge-success">✓</span></div>
       <div class="bk-content">
         <div class="bk-section"><div class="bk-section-title">📅 Choisir la date</div><div class="date-chips" id="dchips"></div></div>
         <div class="bk-section"><div class="bk-section-title">🕐 Choisir l'heure</div>
@@ -476,9 +267,9 @@
         <div class="bk-section"><div class="bk-section-title">📍 Adresse</div><input class="form-input" value="Astana, Есіл ауданы, Мәңгілік Ел, 55"></div>
         <div class="bk-section"><div class="bk-section-title">📝 Notes (optionnel)</div><textarea class="form-input" rows="3" placeholder="Instructions particulières..."></textarea></div>
         <div class="bk-section">
-          <div style="background:white;border-radius:var(--radius);padding:14px;box-shadow:var(--shadow)">
-            <div class="price-row"><span>3 500 ₸ × 3h</span><span>10 500 ₸</span></div>
-            <div class="price-row"><span>Frais de service</span><span>0 ₸</span></div>
+          <div class="card" style="padding:14px">
+            <div class="price-row"><span id="bk-sub">3 500 ₸ × 3h</span><span>10 500 ₸</span></div>
+            <div class="price-row"><span>Cashback 5%</span><span style="color:var(--success)">+525 Coins</span></div>
             <div class="price-row total"><span>Total</span><span id="bk-total">10 500 ₸</span></div>
           </div>
         </div>
@@ -487,71 +278,140 @@
     <div class="sticky-bottom"><button class="btn btn-primary" onclick="goTo('payment')" style="margin:0">Confirmer et payer →</button></div>
   </div>
 
-  <!-- ══ PAYMENT ══ -->
+  <!-- PAYMENT -->
   <div class="screen" id="screen-payment">
-    <div class="top-bar"><button class="back-btn" onclick="goTo('booking')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button><span class="top-bar-title">Paiement sécurisé 🔒</span></div>
-    <div class="screen-scroll">
-      <div class="pay-content">
-        <div class="order-card"><h3>Récapitulatif</h3>
-          <div class="price-row"><span>Алия Мұратова · Ménage</span></div>
-          <div class="price-row" style="margin-top:7px"><span>📅 Mercredi 5 juin · 10:00</span></div>
-          <div class="price-row" style="margin-top:4px"><span>⏱ 3 heures · 📍 Мәңгілік Ел, 55</span></div>
-          <div style="border-top:1px solid var(--border);margin:11px 0"></div>
-          <div class="price-row"><span>Sous-total</span><span>10 500 ₸</span></div>
-          <div class="price-row"><span>Fidélité 🥈 −5%</span><span style="color:var(--success)">−525 ₸</span></div>
-          <div class="price-row total"><span>Total</span><span>9 975 ₸</span></div>
-        </div>
-        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px">Mode de paiement</div>
-        <div class="pay-method sel" onclick="selPay(this)"><div class="pay-icon">💳</div><div class="pay-name">Carte bancaire</div><div class="radio-dot"><div class="radio-inner"></div></div></div>
-        <div id="card-fields" class="card-fields">
-          <input class="form-input" value="4242 4242 4242 4242" style="letter-spacing:2px;font-size:15px;font-weight:600">
-          <div class="card-row"><input class="form-input" value="12/27" placeholder="MM/AA"><input class="form-input" value="•••" placeholder="CVV"></div>
-        </div>
-        <div class="pay-method" onclick="selPay(this)" style="margin-top:8px"><div class="pay-icon">🍎</div><div class="pay-name">Apple Pay</div><div class="radio-dot"><div class="radio-inner"></div></div></div>
-        <div class="pay-method" onclick="selPay(this)" style="margin-top:8px"><div class="pay-icon" style="font-size:18px;font-weight:900;color:#4285F4">G</div><div class="pay-name">Google Pay</div><div class="radio-dot"><div class="radio-inner"></div></div></div>
-        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);margin-top:14px">🔒 Paiement chiffré SSL · Propulsé par Stripe</div>
+    <div class="top-bar"><button class="back-btn" onclick="goTo('booking')">←</button><span class="top-bar-title">Paiement sécurisé 🔒</span></div>
+    <div class="screen-scroll"><div class="pay-content">
+      <div class="order-card"><h3>Récapitulatif</h3>
+        <div class="price-row"><span>Алия Мұратова · Ménage</span></div>
+        <div class="price-row" style="margin-top:7px"><span>📅 Mercredi 5 juin · 10:00</span></div>
+        <div class="price-row" style="margin-top:4px"><span>⏱ 3 heures · 📍 Мәңгілік Ел, 55</span></div>
+        <div style="border-top:1px solid var(--border);margin:11px 0"></div>
+        <div class="price-row"><span>Sous-total</span><span>10 500 ₸</span></div>
+        <div class="price-row"><span>Fidélité 🥈 −5%</span><span style="color:var(--success)">−525 ₸</span></div>
+        <div class="price-row total"><span>Total</span><span>9 975 ₸</span></div>
       </div>
-    </div>
+      <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:10px">Mode de paiement</div>
+      <div class="pay-method sel" onclick="selPay(this)"><div class="pay-icon">💳</div><div class="pay-name">Carte bancaire</div><div class="radio-dot"><div class="radio-inner"></div></div></div>
+      <div id="card-fields" class="card-fields">
+        <input class="form-input" value="4242 4242 4242 4242" style="letter-spacing:2px;font-size:15px;font-weight:700">
+        <div class="card-row"><input class="form-input" value="12/27" placeholder="MM/AA"><input class="form-input" value="•••" placeholder="CVV"></div>
+      </div>
+      <div class="pay-method" onclick="selPay(this)" style="margin-top:8px"><div class="pay-icon">🍎</div><div class="pay-name">Apple Pay</div><div class="radio-dot"><div class="radio-inner"></div></div></div>
+      <div class="pay-method" onclick="selPay(this)" style="margin-top:8px"><div class="pay-icon" style="font-weight:900;color:#4285F4">G</div><div class="pay-name">Google Pay</div><div class="radio-dot"><div class="radio-inner"></div></div></div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);margin-top:14px">🔒 Paiement chiffré SSL · Propulsé par Stripe</div>
+    </div></div>
     <div class="sticky-bottom" id="pay-sticky"><button class="btn btn-primary" onclick="processPayment()" style="margin:0">Payer 9 975 ₸</button></div>
     <div class="loading-overlay" id="pay-loading" style="display:none"><div class="spinner"></div><p>Traitement en cours...</p></div>
   </div>
 
-  <!-- ══ CONFIRMATION ══ -->
-  <div class="screen" id="screen-confirmation" style="top:0;background:white">
+  <!-- CONFIRMATION -->
+  <div class="screen notop" id="screen-confirmation" style="background:#fff">
     <div class="confirm-inner">
       <div class="confirm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
       <h2>Réservation confirmée !</h2>
-      <p>Алия a été notifiée et a confirmé votre réservation. Bonne journée !</p>
+      <p>Алия a été notifiée et a confirmé. Vous gagnez +525 Qyzmet Coins 🎉</p>
       <div class="confirm-card">
         <div class="crow"><span>Prestataire</span><span>Алия Мұратова ✓</span></div>
         <div class="crow"><span>Service</span><span>Femme de ménage</span></div>
         <div class="crow"><span>Date</span><span>Mercredi 5 juin</span></div>
         <div class="crow"><span>Heure</span><span>10:00 — 13:00</span></div>
-        <div class="crow"><span>Adresse</span><span>Мәңгілік Ел, 55</span></div>
-        <div class="crow"><span>Total payé</span><span style="color:var(--primary);font-weight:700">9 975 ₸</span></div>
+        <div class="crow"><span>Total payé</span><span style="color:var(--primary)">9 975 ₸</span></div>
       </div>
-      <button class="btn btn-primary" onclick="goTo('bookings')" style="width:100%;margin:0 0 10px">Voir mes réservations</button>
+      <button class="btn btn-primary" onclick="goTo('track')" style="width:100%">Suivre ma réservation</button>
       <a class="skip-link" onclick="goTo('home')">Retour à l'accueil</a>
     </div>
   </div>
 
-  <!-- ══ BOOKINGS HISTORY ══ -->
+  <!-- TRACKING -->
+  <div class="screen" id="screen-track">
+    <div class="top-bar"><button class="back-btn" onclick="goTo('bookings')">←</button><span class="top-bar-title">Suivi de réservation</span></div>
+    <div class="screen-scroll">
+      <div class="booking-summary"><div class="avatar av-md av-purple">АМ<span class="av-verified">✓</span></div><div class="bk-info"><div class="bk-name">Алия Мұратова</div><div class="bk-service">Mercredi 5 juin · 10:00—13:00</div></div><div class="badge badge-primary">En route</div></div>
+      <div class="track-steps">
+        <div class="track-step done"><div class="track-dot">✓</div><div class="track-info"><h4>Réservation confirmée</h4><p>09:42 · Paiement validé</p></div></div>
+        <div class="track-step done"><div class="track-dot">✓</div><div class="track-info"><h4>Prestataire en route</h4><p>09:55 · Arrivée estimée 10:05</p></div></div>
+        <div class="track-step active"><div class="track-dot">🧹</div><div class="track-info"><h4>Mission en cours</h4><p>Алия travaille actuellement chez vous</p></div></div>
+        <div class="track-step"><div class="track-dot">✓</div><div class="track-info"><h4>Mission terminée</h4><p>En attente de confirmation</p></div></div>
+        <div class="track-step"><div class="track-dot">⭐</div><div class="track-info"><h4>Laisser un avis</h4><p>Notez votre expérience</p></div></div>
+      </div>
+      <div style="padding:0 20px 20px"><button class="btn btn-outline" onclick="openContactModal()">💬 Contacter Алия</button></div>
+    </div>
+  </div>
+
+  <!-- CONTACT MODAL -->
+  <div class="modal-overlay" id="contact-modal">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px"><div class="avatar av-md av-purple">АМ</div><div><div style="font-weight:800;font-size:15px">Алия Мұратова</div><div style="font-size:12px;color:var(--text2)">Répond en ~10 min</div></div></div>
+      <div style="background:var(--bg);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px;font-size:13px">Bonjour ! J'arrive dans 10 minutes 😊</div>
+      <input class="form-input" placeholder="Écrire un message..." style="margin-bottom:10px">
+      <button class="btn btn-primary" onclick="closeContactModal()">Envoyer</button>
+    </div>
+  </div>
+
+  <!-- BOOKINGS (3 different tabs) -->
   <div class="screen" id="screen-bookings">
     <div class="top-bar" style="border-bottom:none"><span class="top-bar-title" style="font-size:20px">Mes réservations</span></div>
-    <div class="hist-tabs"><button class="htab active">À venir</button><button class="htab">Passées</button><button class="htab">Annulées</button></div>
-    <div class="screen-scroll" style="padding-bottom:20px">
-      <div class="bk-item">
-        <div class="bk-item-top"><div class="avatar av-md av-purple">АМ</div><div class="bk-item-info"><div class="bk-item-name">Алия Мұратова</div><div class="bk-item-service">🧹 Femme de ménage</div></div><div class="badge badge-primary">À venir</div></div>
-        <div style="background:var(--bg);border-radius:var(--radius-sm);padding:9px;font-size:13px;color:var(--text2);margin-bottom:9px">📅 Mercredi 5 juin · 10:00—13:00<br>📍 Мәңгілік Ел, 55</div>
-        <div class="bk-item-bottom"><div class="bk-item-date">Dans 2 jours</div><div class="bk-item-price">9 975 ₸</div></div>
-        <div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-outline btn-sm" style="flex:1">Contacter</button><button class="btn btn-danger-outline btn-sm" style="flex:1">Annuler</button></div>
-      </div>
-      <div class="bk-item">
-        <div class="bk-item-top"><div class="avatar av-md av-blue">ДК</div><div class="bk-item-info"><div class="bk-item-name">Дамир Қасымов</div><div class="bk-item-service">🔧 Bricolage</div></div><div class="badge badge-warning">En cours</div></div>
-        <div style="background:var(--bg);border-radius:var(--radius-sm);padding:9px;font-size:13px;color:var(--text2);margin-bottom:9px">📅 Aujourd'hui · 14:00—17:00<br>📍 Бейбітшілік, 12</div>
-        <div class="bk-item-bottom"><div class="bk-item-date">Aujourd'hui</div><div class="bk-item-price">13 500 ₸</div></div>
-      </div>
+    <div class="hist-tabs">
+      <button class="htab active" data-tab="upcoming" onclick="switchBookingTab('upcoming')">À venir</button>
+      <button class="htab" data-tab="past" onclick="switchBookingTab('past')">Passées</button>
+      <button class="htab" data-tab="cancelled" onclick="switchBookingTab('cancelled')">Annulées</button>
     </div>
+    <div class="screen-scroll" style="padding-bottom:20px">
+
+      <!-- UPCOMING -->
+      <div class="bk-tabpanel active" id="panel-upcoming">
+        <div class="bk-item">
+          <div class="bk-item-top"><div class="avatar av-md av-purple">АМ<span class="av-verified">✓</span></div><div class="bk-item-info"><div class="bk-item-name">Алия Мұратова</div><div class="bk-item-service">🧹 Femme de ménage</div></div><div class="badge badge-success">Confirmé ✓</div></div>
+          <div class="bk-detail-box">📅 Demain · 10:00—13:00<br>📍 Мәңгілік Ел, 55</div>
+          <div class="bk-item-bottom"><div class="bk-item-date">Dans 1 jour</div><div class="bk-item-price">9 975 ₸</div></div>
+          <div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-outline btn-sm" style="flex:1" onclick="goTo('track')">Suivre</button><button class="btn btn-danger-outline btn-sm" style="flex:1">Annuler</button></div>
+        </div>
+        <div class="bk-item">
+          <div class="bk-item-top"><div class="avatar av-md av-blue">ДК<span class="av-verified">✓</span></div><div class="bk-item-info"><div class="bk-item-name">Дамир Қасымов</div><div class="bk-item-service">🔧 Bricolage</div></div><div class="badge badge-warning">En attente</div></div>
+          <div class="bk-detail-box">📅 Samedi 8 juin · 14:00<br>📍 Бейбітшілік, 12</div>
+          <div class="bk-item-bottom"><div class="bk-item-date">Dans 4 jours</div><div class="bk-item-price">13 500 ₸</div></div>
+          <div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-outline btn-sm" style="flex:1">Voir détails</button></div>
+        </div>
+      </div>
+
+      <!-- PAST -->
+      <div class="bk-tabpanel" id="panel-past">
+        <div class="bk-item">
+          <div class="bk-item-top"><div class="avatar av-md av-purple">АМ<span class="av-verified">✓</span></div><div class="bk-item-info"><div class="bk-item-name">Алия Мұратова</div><div class="bk-item-service">🧹 Femme de ménage</div></div><div class="badge badge-gray">Terminé ✓</div></div>
+          <div class="bk-detail-box">📅 15 mai · 10:00—12:00</div>
+          <div class="bk-item-bottom"><div class="bk-item-date">⭐⭐⭐⭐⭐ Votre note</div><div class="bk-item-price">7 000 ₸</div></div>
+        </div>
+        <div class="bk-item">
+          <div class="bk-item-top"><div class="avatar av-md av-pink">ГС<span class="av-verified">✓</span></div><div class="bk-item-info"><div class="bk-item-name">Гульнара С.</div><div class="bk-item-service">👶 Baby-sitter</div></div><div class="badge badge-gray">Terminé ✓</div></div>
+          <div class="bk-detail-box">📅 3 mai · 18:00—21:00<br>⭐⭐⭐⭐⭐ "Parfait, ponctuelle et adorable avec les enfants !"</div>
+          <div class="bk-item-bottom"><div class="bk-item-date">Avis laissé</div><div class="bk-item-price">5 000 ₸</div></div>
+        </div>
+        <div class="bk-item">
+          <div class="bk-item-top"><div class="avatar av-md av-orange">НБ<span class="av-verified">✓</span></div><div class="bk-item-info"><div class="bk-item-name">Нурлан Б.</div><div class="bk-item-service">🔧 Bricolage</div></div><div class="badge badge-danger">Remboursé</div></div>
+          <div class="refund-note">⚠️ Le prestataire a annulé · Remboursement intégral effectué</div>
+          <div class="bk-item-bottom"><div class="bk-item-date">20 avril</div><div class="bk-item-price">8 000 ₸</div></div>
+          <button class="btn btn-gold btn-sm" style="width:100%;margin-top:10px">⭐ Laisser un avis</button>
+        </div>
+      </div>
+
+      <!-- CANCELLED -->
+      <div class="bk-tabpanel" id="panel-cancelled">
+        <div class="bk-item">
+          <div class="bk-item-top"><div class="avatar av-md av-green">МТ<span class="av-verified">✓</span></div><div class="bk-item-info"><div class="bk-item-name">Мадина Т.</div><div class="bk-item-service">🧹 Ménage</div></div><div class="badge badge-gray">Annulé par vous</div></div>
+          <div class="bk-detail-box">📅 10 mai · annulé 3h avant le RDV</div>
+          <div class="bk-item-bottom"><div class="bk-item-date">0 ₸ remboursé (délai dépassé)</div><div class="bk-item-price" style="color:var(--text2)">8 400 ₸</div></div>
+        </div>
+        <div class="bk-item">
+          <div class="bk-item-top"><div class="avatar av-md av-blue">ЕС<span class="av-verified">✓</span></div><div class="bk-item-info"><div class="bk-item-name">Ерлан С.</div><div class="bk-item-service">🏗️ Rénovation</div></div><div class="badge badge-danger">Annulé · Remboursé</div></div>
+          <div class="bk-detail-box">📅 2 mai · annulé par le prestataire</div>
+          <div class="bk-item-bottom"><div class="bk-item-date">Remboursement intégral</div><div class="bk-item-price" style="color:var(--success)">+24 000 ₸</div></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="fab-chat" onclick="goTo('chat')">💬</div>
     <div class="tab-bar">
       <button class="tab-item" onclick="goTo('home')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>Accueil</button>
       <button class="tab-item" onclick="goTo('search')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>Recherche</button>
@@ -560,21 +420,28 @@
     </div>
   </div>
 
-  <!-- ══ PROFILE ══ -->
+  <!-- PROFILE -->
   <div class="screen" id="screen-profile">
     <div class="screen-scroll" style="padding-bottom:20px">
-      <div class="profile-header"><div class="profile-av">АМ</div><div class="profile-name">Aigerim Mukanova</div><div class="profile-email">aigerim@gmail.com</div><div style="margin-top:8px"><span class="badge" style="background:rgba(255,255,255,.2);color:white">🥈 Niveau Argent · 12 réservations</span></div></div>
-      <div class="loyalty-card">
-        <div class="loyalty-head"><div><div style="font-size:11px;opacity:.6;font-weight:600;text-transform:uppercase;letter-spacing:1px">Programme fidélité</div><div class="loyalty-level">🥈 Niveau Argent</div><div style="font-size:12px;opacity:.7;margin-top:2px">−10% sur vos réservations</div></div><div style="font-size:28px">🏆</div></div>
+      <div class="profile-header"><div class="avatar av-xl" style="background:rgba(255,255,255,.25);border:3px solid #fff">АМ</div><div class="profile-name">Aigerim Mukanova</div><div class="profile-email">aigerim@gmail.com · +7 701 234 56 78</div></div>
+      <div class="profile-stats">
+        <div class="profile-stat"><strong>12</strong><span>Réservations</span></div>
+        <div class="profile-stat"><strong>4.9 ⭐</strong><span>Note moyenne</span></div>
+        <div class="profile-stat"><strong>2 450</strong><span>Coins</span></div>
+      </div>
+      <div class="loyalty-card" style="margin-top:14px">
+        <div class="loyalty-head"><div><div style="font-size:11px;opacity:.6;font-weight:700;text-transform:uppercase;letter-spacing:1px">Programme fidélité</div><div class="loyalty-level">🥈 Niveau Argent</div><div style="font-size:12px;opacity:.7;margin-top:2px">−10% sur vos réservations</div></div><div style="font-size:28px">🏆</div></div>
         <div class="loyalty-progress-bg"><div class="loyalty-progress-fill" style="width:60%"></div></div>
         <div class="loyalty-text">12 / 20 réservations · Encore 8 pour le Niveau Or 🥇</div>
       </div>
       <div class="menu-list">
-        <div class="menu-item"><div class="menu-icon" style="background:#E0F7FA">⚙️</div><div class="menu-label">Paramètres</div><div class="menu-arrow">›</div></div>
-        <div class="menu-item"><div class="menu-icon" style="background:#F3E8FF">🌐</div><div class="menu-label">Langue · Русский</div><div class="menu-arrow">›</div></div>
-        <div class="menu-item"><div class="menu-icon" style="background:#DCFCE7">🎁</div><div class="menu-label">Code promo</div><div class="menu-arrow">›</div></div>
-        <div class="menu-item"><div class="menu-icon" style="background:#FEF3C7">💬</div><div class="menu-label">Aide & Support</div><div class="menu-arrow">›</div></div>
-        <div class="menu-item" onclick="goTo('login')"><div class="menu-icon" style="background:#FEE2E2">🚪</div><div class="menu-label" style="color:var(--danger)">Déconnexion</div><div class="menu-arrow">›</div></div>
+        <div class="menu-item" onclick="goTo('premium')"><div class="menu-icon" style="background:#FEF3C7">✨</div><div class="menu-label">Qyzmet Premium</div><span class="badge badge-warning">Upgrade</span></div>
+        <div class="menu-item"><div class="menu-icon" style="background:#E0F7FA">👤</div><div class="menu-label">Modifier le profil</div><div class="menu-arrow">›</div></div>
+        <div class="menu-item" onclick="goTo('notifications')"><div class="menu-icon" style="background:#F3E8FF">🔔</div><div class="menu-label">Notifications</div><span class="tab-badge" style="position:static;background:var(--danger)">3</span></div>
+        <div class="menu-item" onclick="openLangModal()"><div class="menu-icon" style="background:#DCFCE7">🌐</div><div class="menu-label">Langue · <span id="profile-lang-label">Русский</span></div><div class="menu-arrow">›</div></div>
+        <div class="menu-item"><div class="menu-icon" style="background:#FFEDD5">🎁</div><div class="menu-label">Code promo</div><div class="menu-arrow">›</div></div>
+        <div class="menu-item" onclick="goTo('chat')"><div class="menu-icon" style="background:#E0F7FA">💬</div><div class="menu-label">Aide & Support (IA)</div><div class="menu-arrow">›</div></div>
+        <div class="menu-item" onclick="goTo('welcome')"><div class="menu-icon" style="background:#FEE2E2">🚪</div><div class="menu-label" style="color:var(--danger)">Déconnexion</div><div class="menu-arrow">›</div></div>
       </div>
       <div style="text-align:center;padding:16px;font-size:12px;color:var(--text2)">Qyzmet v1.0.0 · Astana, Kazakhstan 🇰🇿</div>
     </div>
@@ -586,106 +453,263 @@
     </div>
   </div>
 
-</div><!-- /phone -->
+  <div class="screen" id="screen-premium">
+    <div class="screen-scroll">
+      <div class="ph" style="background:linear-gradient(135deg,#1A1A2E,#3D2C8D);padding:28px 20px 36px;color:#fff;border-radius:0 0 28px 28px;position:relative">
+        <button onclick="goTo('profile')" style="background:rgba(255,255,255,.15);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:18px">←</button>
+        <div style="text-align:center;margin-top:8px">
+          <div style="font-size:38px">👑</div>
+          <h2 style="margin:8px 0 4px;font-size:22px">Qyzmet Premium</h2>
+          <div style="color:#D4C8FF;font-size:13px">Plus d'avantages, moins de frais, priorité totale</div>
+        </div>
+        <div class="plan-toggle" style="display:flex;background:rgba(255,255,255,.12);border-radius:14px;padding:4px;margin-top:20px">
+          <button id="plan-annual" class="sel" onclick="togglePremiumPlan('annual')" style="flex:1;padding:10px;border:none;border-radius:11px;background:#fff;color:#1A1A2E;font-weight:700;font-size:13px">Annuel <span style="color:#16A34A">-33%</span></button>
+          <button id="plan-monthly" onclick="togglePremiumPlan('monthly')" style="flex:1;padding:10px;border:none;border-radius:11px;background:transparent;color:#fff;font-weight:700;font-size:13px">Mensuel</button>
+        </div>
+        <div style="text-align:center;margin-top:18px">
+          <span id="premium-price-val" style="font-size:32px;font-weight:800">1 990 ₸ <small style="font-size:14px;font-weight:500">/mois</small></span>
+          <div><span id="premium-old" style="text-decoration:line-through;color:#A99BE0;font-size:13px">2 990 ₸</span> <span id="premium-save" class="badge badge-success" style="display:inline">Économisez 12 000 ₸/an</span></div>
+        </div>
+      </div>
+      <div style="padding:20px">
+        <div class="feat-list">
+          <div class="feat-item"><div class="feat-check">✓</div><div><b>-15%</b> sur toutes vos réservations</div></div>
+          <div class="feat-item"><div class="feat-check">✓</div><div><b>10% cashback</b> en Qyzmet Coins (au lieu de 5%)</div></div>
+          <div class="feat-item"><div class="feat-check">✓</div><div>Support prioritaire <b>24/7</b> avec l'assistant IA</div></div>
+          <div class="feat-item"><div class="feat-check">✓</div><div>Annulation gratuite jusqu'à <b>2h avant</b> (au lieu de 24h)</div></div>
+          <div class="feat-item"><div class="feat-check">✓</div><div>Accès prioritaire aux <b>meilleurs prestataires</b></div></div>
+          <div class="feat-item"><div class="feat-check">✓</div><div>Badge <b>Premium</b> visible sur votre profil</div></div>
+        </div>
+        <div class="testi-card" style="margin-top:18px">
+          <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
+            <div class="avatar" style="width:34px;height:34px;background:#FDE68A">А</div>
+            <div><b style="font-size:13px">Айгерим Б.</b><div style="font-size:11px;color:var(--text2)">Membre Premium depuis 6 mois</div></div>
+          </div>
+          <div style="font-size:13px;color:var(--text2)">« J'ai économisé plus de 18 000 ₸ ce mois-ci grâce aux réductions et au cashback. Ça vaut largement le coût ! »</div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;margin-top:20px;background:linear-gradient(135deg,#3D2C8D,#6B4EFF)" onclick="goTo('confirmation')">Commencer l'essai gratuit 7 jours</button>
+        <div style="text-align:center;font-size:11px;color:var(--text2);margin-top:10px">Sans engagement · Annulable à tout moment</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-notifications">
+    <div class="screen-scroll">
+      <div class="ph"><button onclick="goTo('profile')" class="back-btn">←</button><h2>Notifications</h2></div>
+      <div style="padding:0 16px 20px">
+        <div class="notif-item unread"><div class="notif-ic" style="background:#DCFCE7">🚗</div><div class="notif-body"><b>Дамир est en route</b><div>Votre prestataire arrive dans ~12 min.</div><span class="notif-time">Il y a 5 min</span></div></div>
+        <div class="notif-item unread"><div class="notif-ic" style="background:#E0F2FE">✅</div><div class="notif-body"><b>Réservation confirmée</b><div>Алия Мұратова a accepté votre demande pour le 18 juin, 14h00.</div><span class="notif-time">Il y a 2h</span></div></div>
+        <div class="notif-item unread"><div class="notif-ic" style="background:#FDF4E3">🎁</div><div class="notif-body"><b>+350 Qyzmet Coins reçus</b><div>Cashback crédité pour votre dernière réservation.</div><span class="notif-time">Hier</span></div></div>
+        <div class="notif-item"><div class="notif-ic" style="background:#FEF3C7">⭐</div><div class="notif-body"><b>Laissez un avis</b><div>Comment s'est passée votre prestation avec Гульнара С. ?</div><span class="notif-time">Hier</span></div></div>
+        <div class="notif-item"><div class="notif-ic" style="background:#F3E8FF">👑</div><div class="notif-body"><b>Offre Premium -20%</b><div>Profitez de l'essai gratuit 7 jours, sans engagement.</div><span class="notif-time">Il y a 2 jours</span></div></div>
+        <div class="notif-item"><div class="notif-ic" style="background:#FEE2E2">💳</div><div class="notif-body"><b>Paiement confirmé</b><div>14 000 ₸ débités pour votre réservation ménage.</div><span class="notif-time">Il y a 3 jours</span></div></div>
+        <div class="notif-item"><div class="notif-ic" style="background:#E0F7FA">👋</div><div class="notif-body"><b>Bienvenue sur Qyzmet !</b><div>Découvrez nos prestataires vérifiés près de chez vous.</div><span class="notif-time">Il y a 1 semaine</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-chat">
+    <div class="chat-header">
+      <button onclick="goTo('home')" class="back-btn" style="color:#fff">←</button>
+      <div class="avatar" style="width:38px;height:38px;background:#fff;color:#3D2C8D;font-size:18px">🤖</div>
+      <div style="flex:1">
+        <b style="color:#fff;font-size:15px">Assistant Qyzmet</b>
+        <div style="color:#D4C8FF;font-size:11px">● En ligne · Réponse instantanée</div>
+      </div>
+      <button onclick="openContactModal()" style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:10px;padding:6px 10px;font-size:11px">Humain</button>
+    </div>
+    <div class="chat-msgs" id="chat-msgs">
+      <div class="msg bot">👋 Bonjour ! Je suis l'assistant IA Qyzmet, disponible 24/7 pour vous aider — que vous soyez client ou prestataire. Posez-moi une question ou choisissez un sujet ci-dessous.</div>
+      <div class="chat-suggest">
+        <button class="chip" onclick="sendQuickMsg('Comment fonctionne le paiement ?','paiement')">💳 Paiement</button>
+        <button class="chip" onclick="sendQuickMsg('Quelle est la politique d\'annulation ?','annulation')">📅 Annulation</button>
+        <button class="chip" onclick="sendQuickMsg('Comment devenir prestataire vérifié ?','kyc')">🪪 KYC / Vérification</button>
+        <button class="chip" onclick="sendQuickMsg('Comment fonctionne le cashback ?','cashback')">🎁 Cashback</button>
+        <button class="chip" onclick="sendQuickMsg('Que comprend l\'abonnement Premium ?','premium')">👑 Premium</button>
+        <button class="chip" onclick="sendQuickMsg('Comment suivre ma réservation ?','suivi')">📍 Suivi réservation</button>
+        <button class="chip" onclick="sendQuickMsg('Mes revenus en tant que prestataire ?','revenus')">💼 Revenus prestataire</button>
+        <button class="chip" onclick="sendQuickMsg('J\'ai un litige avec un prestataire','litige')">⚠️ Litige</button>
+      </div>
+    </div>
+    <div class="chat-input-bar">
+      <input id="chat-input" type="text" placeholder="Écrivez votre question..." onkeydown="if(event.key==='Enter')sendChatMsg()">
+      <button onclick="sendChatMsg()" class="btn btn-primary" style="padding:10px 16px;border-radius:14px">➤</button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-provider-home">
+    <div class="screen-scroll">
+      <div class="prov-home-header">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><div style="color:#D4C8FF;font-size:12px">Bonjour 👋</div><h2 style="color:#fff;margin:2px 0">Дамир Қасымов</h2></div>
+          <div class="avatar" onclick="goTo('profile')" style="background:#fff;color:#3D2C8D">Д</div>
+        </div>
+        <div class="avail-toggle">
+          <span id="avail-status-text" style="color:#fff;font-weight:600;font-size:13px">Disponible maintenant</span>
+          <div class="switch on" onclick="toggleAvailSwitch(this)"><div class="switch-knob"></div></div>
+        </div>
+      </div>
+      <div style="padding:16px">
+        <div class="prov-earnings-card" onclick="goTo('provider-earnings')">
+          <div style="font-size:12px;color:var(--text2)">Revenus aujourd'hui</div>
+          <div style="font-size:26px;font-weight:800">21 500 ₸</div>
+          <div style="font-size:12px;color:#16A34A">+3 missions complétées</div>
+        </div>
+        <div class="stat-grid" style="margin-top:14px">
+          <div class="stat-box"><div style="font-size:20px">⭐ 4.9</div><div style="font-size:11px;color:var(--text2)">Note moyenne</div></div>
+          <div class="stat-box"><div style="font-size:20px">⚡ 3 min</div><div style="font-size:11px;color:var(--text2)">Temps de réponse</div></div>
+          <div class="stat-box"><div style="font-size:20px">✅ 312</div><div style="font-size:11px;color:var(--text2)">Missions réalisées</div></div>
+        </div>
+        <h3 style="margin:20px 0 10px;font-size:15px">Nouvelles demandes</h3>
+        <div class="req-card">
+          <div style="display:flex;justify-content:space-between"><b>Ménage · 3h</b><span class="badge badge-success">+12 250 ₸</span></div>
+          <div style="font-size:12px;color:var(--text2);margin:4px 0">Алия Мұратова · Aujourd'hui, 16h00 · 2.3 km</div>
+          <div class="req-actions">
+            <button class="btn btn-outline" style="flex:1" onclick="declineRequest(this.closest('.req-card'))">Refuser</button>
+            <button class="btn btn-primary" style="flex:1" onclick="acceptRequest(this.closest('.req-card'))">Accepter</button>
+          </div>
+        </div>
+        <div class="req-card">
+          <div style="display:flex;justify-content:space-between"><b>Baby-sitting · 4h</b><span class="badge badge-success">+14 000 ₸</span></div>
+          <div style="font-size:12px;color:var(--text2);margin:4px 0">Гульнара С. · Demain, 09h00 · 1.1 km</div>
+          <div class="req-actions">
+            <button class="btn btn-outline" style="flex:1" onclick="declineRequest(this.closest('.req-card'))">Refuser</button>
+            <button class="btn btn-primary" style="flex:1" onclick="acceptRequest(this.closest('.req-card'))">Accepter</button>
+          </div>
+        </div>
+        <div class="banner" style="background:#FEF3C7;margin-top:16px" onclick="goTo('provider-kyc')">
+          <div>🪪 <b>Vérification KYC</b><div style="font-size:12px;color:var(--text2)">Complétez votre dossier pour recevoir plus de demandes</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-item active" onclick="goTo('provider-home')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>Tableau de bord</button>
+      <button class="tab-item" onclick="goTo('provider-bookings')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>Missions</button>
+      <button class="tab-item" onclick="goTo('provider-earnings')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1H7.5c.12 2.19 1.76 3.42 3.7 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.9-4.4z"/></svg>Revenus</button>
+      <button class="tab-item" onclick="goTo('profile')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>Profil</button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-provider-kyc">
+    <div class="screen-scroll">
+      <div class="ph"><button onclick="goTo('provider-home')" class="back-btn">←</button><h2>Vérification KYC</h2><div id="kyc-step-label" style="font-size:12px;color:var(--text2)">Étape 1 / 4</div></div>
+      <div style="display:flex;gap:6px;padding:0 16px 16px">
+        <div class="kyc-progress done" id="kyc-bar-1"></div>
+        <div class="kyc-progress" id="kyc-bar-2"></div>
+        <div class="kyc-progress" id="kyc-bar-3"></div>
+        <div class="kyc-progress" id="kyc-bar-4"></div>
+      </div>
+      <div style="padding:0 16px 24px">
+        <div id="kyc-panel-1" style="display:block">
+          <div class="kyc-title">Pièce d'identité</div>
+          <div class="kyc-sub">Carte d'identité ou passeport, recto et verso, lisible et non expiré.</div>
+          <div class="upload-box" onclick="kycUpload(this,'Recto CNI')"><div class="uic">📄</div><h5>Recto de la pièce d'identité</h5><div style="font-size:11px;color:var(--text2)">JPG, PNG ou PDF · 5 Mo max</div></div>
+          <div class="upload-box" onclick="kycUpload(this,'Verso CNI')"><div class="uic">📄</div><h5>Verso de la pièce d'identité</h5><div style="font-size:11px;color:var(--text2)">JPG, PNG ou PDF · 5 Mo max</div></div>
+          <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="kycNext(2)">Continuer</button>
+        </div>
+        <div id="kyc-panel-2" style="display:none">
+          <div class="kyc-title">Selfie de vérification</div>
+          <div class="kyc-sub">Une photo de vous tenant votre pièce d'identité à côté de votre visage, pour confirmer votre identité.</div>
+          <div class="upload-box" onclick="kycUpload(this,'Selfie de vérification')"><div class="uic">🤳</div><h5>Selfie avec pièce d'identité</h5><div style="font-size:11px;color:var(--text2)">Visage et document bien visibles</div></div>
+          <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="kycNext(3)">Continuer</button>
+        </div>
+        <div id="kyc-panel-3" style="display:none">
+          <div class="kyc-title">Justificatifs complémentaires</div>
+          <div class="kyc-sub">Justificatif de domicile (- de 3 mois) et casier judiciaire vierge (obligatoire pour baby-sitting et ménage à domicile).</div>
+          <div class="upload-box" onclick="kycUpload(this,'Justificatif de domicile')"><div class="uic">🏠</div><h5>Justificatif de domicile</h5><div style="font-size:11px;color:var(--text2)">Facture, quittance ou attestation</div></div>
+          <div class="upload-box" onclick="kycUpload(this,'Casier judiciaire')"><div class="uic">⚖️</div><h5>Casier judiciaire vierge</h5><div style="font-size:11px;color:var(--text2)">Requis pour les services à la personne</div></div>
+          <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="kycNext(4)">Continuer</button>
+        </div>
+        <div id="kyc-panel-4" style="display:none">
+          <div class="kyc-title">Demande envoyée 🎉</div>
+          <div class="kyc-sub">Votre dossier a été transmis à notre équipe de vérification (verification@qyzmet.kz). Validation sous <b>24h</b> en général.</div>
+          <div class="kyc-status-row"><span>✅</span><div>Documents reçus</div></div>
+          <div class="kyc-status-row"><span>🕓</span><div>En cours de vérification par notre équipe</div></div>
+          <div class="kyc-status-row" style="opacity:.5"><span>⬜</span><div>Compte validé · vous pourrez accepter des missions</div></div>
+          <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="goTo('provider-home')">Retour au tableau de bord</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-provider-bookings">
+    <div class="screen-scroll">
+      <div class="ph"><h2>Mes missions</h2></div>
+      <div class="htabs" style="display:flex;gap:8px;padding:0 16px 12px">
+        <button class="htab active" data-tab="pv-upcoming" onclick="switchBookingTab('pv-upcoming')">À venir</button>
+        <button class="htab" data-tab="pv-done" onclick="switchBookingTab('pv-done')">Terminées</button>
+      </div>
+      <div style="padding:0 16px 20px">
+        <div class="bk-tabpanel active" id="panel-pv-upcoming">
+          <div class="card" style="margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between"><b>Алия Мұратова</b><span class="badge badge-success">Confirmée</span></div>
+            <div style="font-size:12px;color:var(--text2);margin:4px 0">🧹 Ménage · 18 juin, 14h00 · 3h</div>
+            <div style="font-size:13px;font-weight:700">+12 250 ₸</div>
+            <button class="btn btn-outline" style="width:100%;margin-top:8px" onclick="goTo('provider-home')">Voir le suivi</button>
+          </div>
+          <div class="card">
+            <div style="display:flex;justify-content:space-between"><b>Гульнара С.</b><span class="badge badge-warning">En attente</span></div>
+            <div style="font-size:12px;color:var(--text2);margin:4px 0">👶 Baby-sitting · 19 juin, 09h00 · 4h</div>
+            <div style="font-size:13px;font-weight:700">+14 000 ₸</div>
+          </div>
+        </div>
+        <div class="bk-tabpanel" id="panel-pv-done">
+          <div class="card" style="margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between"><b>Нурлан Б.</b><span class="badge badge-gray">Terminée ✓</span></div>
+            <div style="font-size:12px;color:var(--text2);margin:4px 0">🔧 Bricolage · 10 juin · 2h</div>
+            <div style="font-size:13px;font-weight:700;color:#16A34A">+9 800 ₸ versés</div>
+            <div style="font-size:12px;margin-top:6px">⭐⭐⭐⭐⭐ « Très professionnel, merci ! »</div>
+          </div>
+          <div class="card">
+            <div style="display:flex;justify-content:space-between"><b>Мадина Т.</b><span class="badge badge-gray">Terminée ✓</span></div>
+            <div style="font-size:12px;color:var(--text2);margin:4px 0">🧹 Ménage · 5 juin · 3h</div>
+            <div style="font-size:13px;font-weight:700;color:#16A34A">+12 250 ₸ versés</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-item" onclick="goTo('provider-home')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>Tableau de bord</button>
+      <button class="tab-item active" onclick="goTo('provider-bookings')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>Missions</button>
+      <button class="tab-item" onclick="goTo('provider-earnings')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1H7.5c.12 2.19 1.76 3.42 3.7 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.9-4.4z"/></svg>Revenus</button>
+      <button class="tab-item" onclick="goTo('profile')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>Profil</button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-provider-earnings">
+    <div class="screen-scroll">
+      <div class="ph"><h2>Revenus</h2></div>
+      <div style="padding:0 16px 20px">
+        <div class="prov-earnings-card">
+          <div style="font-size:12px;color:var(--text2)">Solde disponible</div>
+          <div style="font-size:30px;font-weight:800">87 400 ₸</div>
+          <button class="btn btn-primary" style="width:100%;margin-top:10px">Retirer vers ma carte</button>
+        </div>
+        <div class="stat-grid" style="margin-top:14px">
+          <div class="stat-box"><div style="font-size:18px">21 500 ₸</div><div style="font-size:11px;color:var(--text2)">Aujourd'hui</div></div>
+          <div class="stat-box"><div style="font-size:18px">142 000 ₸</div><div style="font-size:11px;color:var(--text2)">Cette semaine</div></div>
+          <div class="stat-box"><div style="font-size:18px">512 000 ₸</div><div style="font-size:11px;color:var(--text2)">Ce mois</div></div>
+        </div>
+        <h3 style="margin:20px 0 10px;font-size:15px">Historique des versements</h3>
+        <div class="card" style="margin-bottom:10px;display:flex;justify-content:space-between"><div>Versement Stripe<div style="font-size:11px;color:var(--text2)">12 juin 2026</div></div><b style="color:#16A34A">+64 200 ₸</b></div>
+        <div class="card" style="margin-bottom:10px;display:flex;justify-content:space-between"><div>Versement Stripe<div style="font-size:11px;color:var(--text2)">5 juin 2026</div></div><b style="color:#16A34A">+58 900 ₸</b></div>
+        <div class="card" style="display:flex;justify-content:space-between"><div>Versement Stripe<div style="font-size:11px;color:var(--text2)">29 mai 2026</div></div><b style="color:#16A34A">+71 300 ₸</b></div>
+      </div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-item" onclick="goTo('provider-home')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>Tableau de bord</button>
+      <button class="tab-item" onclick="goTo('provider-bookings')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>Missions</button>
+      <button class="tab-item active" onclick="goTo('provider-earnings')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1H7.5c.12 2.19 1.76 3.42 3.7 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.9-4.4z"/></svg>Revenus</button>
+      <button class="tab-item" onclick="goTo('profile')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>Profil</button>
+    </div>
+  </div>
+
+</div>
 
 <div style="margin-top:16px;color:rgba(255,255,255,.65);font-size:12px;text-align:center">
   Ouvrez <strong>demo/index.html</strong> dans votre navigateur · Cliquez pour naviguer
 </div>
 
-<script>
-const screenNames = {splash:'Splash',onboarding:'Onboarding',login:'Connexion','phone-auth':'Auth Téléphone',home:'Accueil',search:'Recherche','providers-list':'Liste prestataires','provider-detail':'Profil prestataire',booking:'Réservation',payment:'Paiement',confirmation:'Confirmation ✓',bookings:'Mes réservations',profile:'Profil'};
-const noStatusBar = new Set(['splash','onboarding','login','phone-auth','confirmation']);
-
-function goTo(s) {
-  document.querySelectorAll('.screen').forEach(el => { el.classList.remove('active'); el.style.top = ''; });
-  const el = document.getElementById('screen-'+s);
-  el.classList.add('active');
-  const hasBar = !noStatusBar.has(s);
-  document.getElementById('sb').style.display = hasBar ? 'flex' : 'none';
-  el.style.top = noStatusBar.has(s) ? '0' : '44px';
-  document.getElementById('breadcrumb').textContent = 'Écran : ' + (screenNames[s] || s);
-  const sc = el.querySelector('.screen-scroll');
-  if (sc) sc.scrollTop = 0;
-}
-
-// Splash → Onboarding
-setTimeout(() => goTo('onboarding'), 2200);
-
-// Onboarding
-let slide = 0;
-document.getElementById('ob-next').onclick = () => {
-  document.getElementById('sl'+slide).classList.remove('active');
-  document.getElementById('od'+slide).classList.remove('active');
-  slide < 2 ? slide++ : null;
-  document.getElementById('sl'+slide).classList.add('active');
-  document.getElementById('od'+slide).classList.add('active');
-  if (slide === 2) document.getElementById('ob-next').textContent = 'Commencer →';
-  if (slide > 2) { slide = 0; goTo('login'); }
-  if (slide === 2 && document.getElementById('ob-next').textContent === 'Commencer →') {
-    document.getElementById('ob-next').onclick = () => goTo('login');
-  }
-};
-
-// Filter chips
-document.querySelectorAll('.filters-scroll').forEach(row => {
-  row.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
-    row.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
-    c.classList.add('active');
-  }));
-});
-
-// Hist tabs
-document.querySelectorAll('.hist-tabs').forEach(row => {
-  row.querySelectorAll('.htab').forEach(t => t.addEventListener('click', () => {
-    row.querySelectorAll('.htab').forEach(x => x.classList.remove('active'));
-    t.classList.add('active');
-  }));
-});
-
-// Detail tabs
-function switchTab(i) {
-  document.querySelectorAll('.dtab').forEach((t,j) => t.classList.toggle('active', i===j));
-  document.querySelectorAll('.tcontent').forEach((c,j) => c.classList.toggle('active', i===j));
-}
-
-// Date chips
-(function() {
-  const c = document.getElementById('dchips');
-  const days = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
-  const today = new Date();
-  for (let i=0;i<7;i++) {
-    const d = new Date(today); d.setDate(today.getDate()+i);
-    const chip = document.createElement('div');
-    chip.className = 'dchip'+(i===1?' sel':'');
-    chip.innerHTML = `<div class="dn">${days[d.getDay()]}</div><div class="dd">${d.getDate()}</div>`;
-    chip.onclick = () => { document.querySelectorAll('.dchip').forEach(x=>x.classList.remove('sel')); chip.classList.add('sel'); };
-    c.appendChild(chip);
-  }
-})();
-
-function selTime(el) {
-  if (el.classList.contains('taken')) return;
-  el.closest('.time-grid').querySelectorAll('.tslot:not(.taken)').forEach(s=>s.classList.remove('sel'));
-  el.classList.add('sel');
-}
-
-function selDur(el, dur) {
-  el.closest('.dur-sel').querySelectorAll('.dur-btn').forEach(b=>b.classList.remove('sel'));
-  el.classList.add('sel');
-  document.getElementById('bk-total').textContent = (3500*dur).toLocaleString('fr')+' ₸';
-}
-
-function selPay(el) {
-  document.querySelectorAll('.pay-method').forEach(m=>m.classList.remove('sel'));
-  el.classList.add('sel');
-  document.getElementById('card-fields').style.display = el.querySelector('.pay-icon').textContent.includes('💳') ? 'block' : 'none';
-}
-
-function processPayment() {
-  document.getElementById('pay-loading').style.display = 'flex';
-  document.getElementById('pay-sticky').style.display = 'none';
-  setTimeout(() => { document.getElementById('pay-loading').style.display='none'; document.getElementById('pay-sticky').style.display='block'; goTo('confirmation'); }, 2200);
-}
-</script>
+<script src="app.js"></script>
 </body>
 </html>
