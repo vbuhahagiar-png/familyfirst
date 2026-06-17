@@ -120,7 +120,7 @@ class _CalendarWidget extends StatelessWidget {
           ),
 
           // Day names
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
                 .map((d) => Expanded(
@@ -298,13 +298,23 @@ class _DayBookings extends ConsumerWidget {
                       decoration: BoxDecoration(
                         color: AppColors.surface,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Helpers.bookingStatusColor(booking.status)
-                              .withOpacity(0.3),
-                        ),
-                        borderSide: BorderSide(
-                          color: Helpers.bookingStatusColor(booking.status),
-                          width: 3,
+                        border: Border(
+                          left: BorderSide(
+                            color: Helpers.bookingStatusColor(booking.status),
+                            width: 3,
+                          ),
+                          top: BorderSide(
+                            color: Helpers.bookingStatusColor(booking.status)
+                                .withOpacity(0.3),
+                          ),
+                          right: BorderSide(
+                            color: Helpers.bookingStatusColor(booking.status)
+                                .withOpacity(0.3),
+                          ),
+                          bottom: BorderSide(
+                            color: Helpers.bookingStatusColor(booking.status)
+                                .withOpacity(0.3),
+                          ),
                         ),
                       ),
                       child: Row(

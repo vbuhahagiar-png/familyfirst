@@ -1,0 +1,14 @@
+.dart_tool/
+.flutter-plugins-dependencies
+build/
+android/.gradle/
+android/build/
+android/local.properties
+android/gradlew
+android/gradlew.bat
+android/gradle/
+android/app/src/main/java/
+ios/Flutter/
+ios/Runner/GeneratedPluginRegistrant.h
+ios/Runner/GeneratedPluginRegistrant.m
+pubspec.lock
